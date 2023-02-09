@@ -1,3 +1,5 @@
+/* Copyright 2023 Remi KEAT */
+
 #include <gtest/gtest.h>
 
 int main(int argc, char* argv[]) {

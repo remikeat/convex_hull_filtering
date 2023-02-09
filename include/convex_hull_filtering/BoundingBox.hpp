@@ -1,5 +1,7 @@
-#ifndef CONVEX_HULL_FILTERING_INCLUDE_CONVEX_HULL_FILTERING_BOUDING_BOX_HPP_
-#define CONVEX_HULL_FILTERING_INCLUDE_CONVEX_HULL_FILTERING_BOUDING_BOX_HPP_
+/* Copyright 2023 Remi KEAT */
+
+#ifndef INCLUDE_CONVEX_HULL_FILTERING_BOUNDINGBOX_HPP_
+#define INCLUDE_CONVEX_HULL_FILTERING_BOUNDINGBOX_HPP_
 
 #include <vector>
 
@@ -8,11 +10,11 @@
 namespace convex_hull_filtering {
 class BoundingBox {
  public:
-  BoundingBox(const std::vector<Point>& points);
+  explicit BoundingBox(const std::vector<Point>& points);
   bool intersection(const BoundingBox& b) const;
   Point min;
   Point max;
 };
 }  // namespace convex_hull_filtering
 
-#endif  // CONVEX_HULL_FILTERING_INCLUDE_CONVEX_HULL_FILTERING_BOUDING_BOX_HPP_
+#endif  //  INCLUDE_CONVEX_HULL_FILTERING_BOUNDINGBOX_HPP_

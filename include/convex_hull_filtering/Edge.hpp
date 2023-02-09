@@ -1,7 +1,9 @@
-#ifndef CONVEX_HULL_FILTERING_INCLUDE_CONVEX_HULL_FILTERING_EDGE_HPP_
-#define CONVEX_HULL_FILTERING_INCLUDE_CONVEX_HULL_FILTERING_EDGE_HPP_
+/* Copyright 2023 Remi KEAT */
 
-#include <tuple>
+#ifndef INCLUDE_CONVEX_HULL_FILTERING_EDGE_HPP_
+#define INCLUDE_CONVEX_HULL_FILTERING_EDGE_HPP_
+
+#include <utility>
 
 #include "convex_hull_filtering/Point.hpp"
 
@@ -21,4 +23,4 @@ class Edge {
 };
 }  // namespace convex_hull_filtering
 
-#endif  // CONVEX_HULL_FILTERING_INCLUDE_CONVEX_HULL_FILTERING_EDGE_HPP_
+#endif  // INCLUDE_CONVEX_HULL_FILTERING_EDGE_HPP_

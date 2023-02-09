@@ -1,3 +1,5 @@
+/* Copyright 2023 Remi KEAT */
+
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <iostream>
@@ -14,8 +16,8 @@ std::vector<chf::Point> convertToCpp(PyArrayObject* arr) {
   if (PyArray_TYPE(arr) == NPY_DOUBLE) {
     int nbRows = dims[0u];
     for (int i = 0; i < nbRows; i++) {
-      double* x = (double*)PyArray_GETPTR2(arr, i, 0u);
-      double* y = (double*)PyArray_GETPTR2(arr, i, 1u);
+      double* x = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u));
+      double* y = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 1u));
       points.push_back(chf::Point(*x, *y));
     }
   } else {
@@ -29,9 +31,10 @@ PyObject* convertToPython(const std::vector<chf::Point>& points) {
   dims[0u] = points.size();
   dims[1u] = 2u;
   PyObject* ret = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
+  PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(ret);
   for (std::size_t i = 0; i < points.size(); i++) {
-    double* x = (double*)PyArray_GETPTR2((PyArrayObject*)ret, i, 0u);
-    double* y = (double*)PyArray_GETPTR2((PyArrayObject*)ret, i, 1u);
+    double* x = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u));
+    double* y = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 1u));
     *x = points[i].x;
     *y = points[i].y;
   }

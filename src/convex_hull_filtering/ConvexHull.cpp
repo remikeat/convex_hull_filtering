@@ -1,3 +1,5 @@
+/* Copyright 2023 Remi KEAT */
+
 #include "convex_hull_filtering/ConvexHull.hpp"
 
 #include <cmath>
@@ -88,7 +90,7 @@ std::pair<bool, ConvexHull> ConvexHull::intersection(
   std::size_t nbPointsP = points.size();
   std::size_t nbPointsQ = Q.points.size();
 
-  // TODO : Check and handle all the edge cases (Point, Segment)
+  // TODO(Remi KEAT) : Check and handle all the edge cases (Point, Segment)
   if (nbPointsP < 3 || nbPointsQ < 3) {
     return std::make_pair(false, *this);
   }

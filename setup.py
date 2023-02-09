@@ -4,7 +4,7 @@
 setup.py file
 """
 
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 convex_hull_filtering_module = Extension('convex_hull_filtering',
                                          sources=[
@@ -20,8 +20,8 @@ convex_hull_filtering_module = Extension('convex_hull_filtering',
 
 setup(name='convex_hull_filtering',
       version='0.1',
-      author="Remi KEAT",
+      author='Remi KEAT',
       description="""Convex hull filtering""",
       ext_modules=[convex_hull_filtering_module],
-      py_modules=["convex_hull_filtering"],
+      py_modules=['convex_hull_filtering'],
       )

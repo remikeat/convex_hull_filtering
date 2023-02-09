@@ -1,3 +1,5 @@
+/* Copyright 2023 Remi KEAT */
+
 #include "convex_hull_filtering/Edge.hpp"
 
 #include <cmath>
@@ -19,7 +21,7 @@ float Edge::dot(const Edge& edgeB) const {
 float Edge::crossProdZ(const Edge edgeB) const {
   auto [bm, b] = edgeB;
   return (e.x - em.x) * (b.y - bm.y) - (e.y - em.y) * (b.x - bm.x);
-};
+}
 
 float Edge::getAngle(const Point& pt) const {
   Edge a(pt, em);
@@ -48,9 +50,9 @@ std::pair<bool, Point> Edge::checkIntersection(const Edge& qDot) const {
     }
   }
   return std::make_pair(false, e);
-};
+}
 
 bool Edge::belongToHalfPlane(const Point& pt) const {
   return crossProdZ(Edge(em, pt)) >= 0.0f;
-};
+}
 }  // namespace convex_hull_filtering

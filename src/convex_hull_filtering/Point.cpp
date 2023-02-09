@@ -1,3 +1,5 @@
+/* Copyright 2023 Remi KEAT */
+
 #include "convex_hull_filtering/Point.hpp"
 
 #include <cmath>

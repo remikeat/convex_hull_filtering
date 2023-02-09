@@ -1,5 +1,7 @@
 #include "convex_hull_filtering/BoundingBox.hpp"
 
+/* Copyright 2023 Remi KEAT */
+
 #include <gtest/gtest.h>
 
 namespace chf = convex_hull_filtering;

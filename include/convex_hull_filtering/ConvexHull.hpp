@@ -1,7 +1,10 @@
-#ifndef CONVEX_HULL_FILTERING_INCLUDE_CONVEX_HULL_FILTERING_CONVEX_HULL_HPP_
-#define CONVEX_HULL_FILTERING_INCLUDE_CONVEX_HULL_FILTERING_CONVEX_HULL_HPP_
+/* Copyright 2023 Remi KEAT */
+
+#ifndef INCLUDE_CONVEX_HULL_FILTERING_CONVEXHULL_HPP_
+#define INCLUDE_CONVEX_HULL_FILTERING_CONVEXHULL_HPP_
 
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "convex_hull_filtering/BoundingBox.hpp"
@@ -16,7 +19,7 @@ constexpr char Q_POLY = 'Q';
 
 class ConvexHull {
  public:
-  ConvexHull(const std::vector<Point>& points);
+  explicit ConvexHull(const std::vector<Point>& points);
   Point getCircPoint(int index) const;
   float getArea() const;
   bool isPointInside(const Point& pt) const;
@@ -30,4 +33,4 @@ class ConvexHull {
 };
 }  // namespace convex_hull_filtering
 
-#endif  // CONVEX_HULL_FILTERING_INCLUDE_CONVEX_HULL_FILTERING_CONVEX_HULL_HPP_
+#endif  // INCLUDE_CONVEX_HULL_FILTERING_CONVEXHULL_HPP_

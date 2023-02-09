@@ -1,3 +1,5 @@
+/* Copyright 2023 Remi KEAT */
+
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
