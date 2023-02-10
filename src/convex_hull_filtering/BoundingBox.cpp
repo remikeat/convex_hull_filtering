@@ -8,8 +8,14 @@
 #include "convex_hull_filtering/Point.hpp"
 
 namespace convex_hull_filtering {
+
+BoundingBox::BoundingBox() {}
+
+BoundingBox::BoundingBox(const Point& min, const Point max)
+    : min(min), max(max) {}
+
 BoundingBox::BoundingBox(const std::vector<Point>& points) {
-  for (auto p : points) {
+  for (const auto& p : points) {
     if (p.x < min.x) {
       min.x = p.x;
     }
@@ -24,6 +30,8 @@ BoundingBox::BoundingBox(const std::vector<Point>& points) {
     }
   }
 }
+
+float BoundingBox::getArea() const { return (max.x - min.x) * (max.y - min.y); }
 
 bool BoundingBox::intersection(const BoundingBox& b) const {
   // Separating Axis Theorem
@@ -41,5 +49,11 @@ bool BoundingBox::intersection(const BoundingBox& b) const {
   // as below
   return (max.x > b.min.x && min.x < b.max.x && max.y > b.min.y &&
           min.y < b.max.y);
+}
+
+BoundingBox BoundingBox::getUnion(const BoundingBox& b) const {
+  return BoundingBox(
+      Point(std::fmin(min.x, b.min.x), std::fmin(min.y, b.min.y)),
+      Point(std::fmax(max.x, b.max.x), std::fmax(max.y, b.max.y)));
 }
 }  // namespace convex_hull_filtering

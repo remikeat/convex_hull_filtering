@@ -7,7 +7,6 @@
 #include <utility>
 #include <vector>
 
-#include "convex_hull_filtering/BoundingBox.hpp"
 #include "convex_hull_filtering/Edge.hpp"
 #include "convex_hull_filtering/Point.hpp"
 
@@ -24,12 +23,13 @@ class ConvexHull {
   float getArea() const;
   bool isPointInside(const Point& pt) const;
   std::pair<bool, ConvexHull> intersection(const ConvexHull& Q) const;
+
+  std::vector<Point> points;
+
+ private:
   std::tuple<char, bool, Point> advance(int curIdxP, int curIdxQ,
                                         const Edge& pDot, const Edge& qDot,
                                         char inside) const;
-
-  std::vector<Point> points;
-  BoundingBox boundingBox;
 };
 }  // namespace convex_hull_filtering
 

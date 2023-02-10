@@ -4,7 +4,7 @@
 #define INCLUDE_CONVEX_HULL_FILTERING_CONFIG_HPP_
 
 namespace convex_hull_filtering {
-const float EPSILON = 1e-6;
+constexpr float EPSILON = 1e-6;
 }  // namespace convex_hull_filtering
 
 #endif  // INCLUDE_CONVEX_HULL_FILTERING_CONFIG_HPP_

@@ -15,7 +15,7 @@ std::vector<chf::Point> convertToCpp(PyArrayObject* arr) {
   npy_intp* dims = PyArray_DIMS(arr);
   if (PyArray_TYPE(arr) == NPY_DOUBLE) {
     int nbRows = dims[0u];
-    for (int i = 0; i < nbRows; i++) {
+    for (auto i = 0; i < nbRows; i++) {
       double* x = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u));
       double* y = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 1u));
       points.push_back(chf::Point(*x, *y));
@@ -32,7 +32,7 @@ PyObject* convertToPython(const std::vector<chf::Point>& points) {
   dims[1u] = 2u;
   PyObject* ret = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
   PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(ret);
-  for (std::size_t i = 0; i < points.size(); i++) {
+  for (auto i = 0; i < points.size(); i++) {
     double* x = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u));
     double* y = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 1u));
     *x = points[i].x;
