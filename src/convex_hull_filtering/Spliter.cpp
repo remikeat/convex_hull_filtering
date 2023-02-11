@@ -12,20 +12,17 @@
 
 namespace convex_hull_filtering {
 
-Spliter::Spliter(std::list<std::unique_ptr<RTreeNode> >& nodesToAdd)
-    : nodesToAdd(nodesToAdd) {}
+Spliter::Spliter(RTreeNodePtrList& nodesToAdd) : nodesToAdd(nodesToAdd) {}
 
-void Spliter::moveEntryTo(
-    const std::list<std::unique_ptr<RTreeNode> >::iterator& iter,
-    RTreeNode& destNode) {
-  (*iter)->parent = &destNode;
-  destNode.bb = destNode.bb.getUnion((*iter)->bb);
-  destNode.children.push_back(std::move(*iter));
-  entries.erase(iter);
+void Spliter::moveEntryTo(const RTreeNodePtrList::iterator& iter,
+                          RTreeNode& destNode) {
+  auto& node = **iter;
+  node.parent = &destNode;
+  destNode.bb = destNode.bb.getUnion(node.bb);
+  moveRTreeNode(entries, iter, destNode.children);
 }
 
-std::pair<std::list<std::unique_ptr<RTreeNode> >::iterator,
-          std::list<std::unique_ptr<RTreeNode> >::iterator>
+std::pair<RTreeNodePtrList::iterator, RTreeNodePtrList::iterator>
 Spliter::pickSeeds() {
   float mostWastedArea = 0.0f;
   auto iterI = entries.begin();
@@ -38,9 +35,11 @@ Spliter::pickSeeds() {
   // Choose the most wasteful pair
   for (; iterI != end; ++iterI) {
     iterJ = iterI;
+    auto& nodeI = **iterI;
     for (++iterJ; iterJ != end; ++iterJ) {
-      float wastedArea = (*iterI)->bb.getUnion((*iterJ)->bb).getArea() -
-                         (*iterI)->bb.getArea() - (*iterJ)->bb.getArea();
+      auto& nodeJ = **iterJ;
+      float wastedArea = nodeI.bb.getUnion(nodeJ.bb).getArea() -
+                         nodeI.bb.getArea() - nodeJ.bb.getArea();
       if (wastedArea > mostWastedArea) {
         mostWastedArea = wastedArea;
         bestPair = std::make_pair(iterI, iterJ);
@@ -50,8 +49,8 @@ Spliter::pickSeeds() {
   return bestPair;
 }
 
-std::pair<float, std::list<std::unique_ptr<RTreeNode> >::iterator>
-Spliter::pickNext(const RTreeNode& destNode1, const RTreeNode& destNode2) {
+std::pair<float, RTreeNodePtrList::iterator> Spliter::pickNext(
+    const RTreeNode& destNode1, const RTreeNode& destNode2) {
   float destNode1Area = destNode1.bb.getArea();
   float destNode2Area = destNode2.bb.getArea();
   auto iter = entries.begin();
@@ -62,8 +61,9 @@ Spliter::pickNext(const RTreeNode& destNode1, const RTreeNode& destNode2) {
   // Determine cost of putting each entry in each group
   // Find entry with greatest preference for one group
   for (; iter != entries.end(); ++iter) {
-    float unionArea1 = destNode1.bb.getUnion((*iter)->bb).getArea();
-    float unionArea2 = destNode2.bb.getUnion((*iter)->bb).getArea();
+    auto& node = **iter;
+    float unionArea1 = destNode1.bb.getUnion(node.bb).getArea();
+    float unionArea2 = destNode2.bb.getUnion(node.bb).getArea();
     float increase1 = unionArea1 - destNode1Area;
     float increase2 = unionArea2 - destNode2Area;
     float diff = std::fabs(increase1 - increase2);
@@ -93,41 +93,41 @@ bool Spliter::splitNode(int m, RTreeNode& sourceNode) {
     return false;
   }
 
+  // There shouldn't be more than one node in nodesToAdd
+  if (nodesToAdd.size() > 1) {
+    throw std::runtime_error("There shouldn't be more than one node to add");
+  }
+
   // Usually a split is initiated when we wanted
   // to add a Node but it wasn't possible
   // so add the node to the entries too
   if (!nodesToAdd.empty()) {
     auto iter = nodesToAdd.begin();
-    entries.push_back(std::move(*iter));
-    iter = nodesToAdd.erase(iter);
-  }
-
-  // Also there shouldn't be more than one node in nodesToAdd
-  if (nodesToAdd.size() >= 1) {
-    throw std::runtime_error("There shouldn't be more than one node to add");
+    iter = moveRTreeNode(nodesToAdd, iter, entries);
   }
 
   // Create new node to store the newly split node
-  nodesToAdd.push_back(std::make_unique<RTreeNode>());
-
   RTreeNode& destNode1 = sourceNode;
-  RTreeNode& destNode2 = *(nodesToAdd.back());
+  RTreeNode& destNode2 = **makeNewRTreeNode(nodesToAdd);
 
+  // Copy some node of the source node properties and reset source node
+  destNode2.value = destNode1.value;
   destNode2.isLeaf = destNode1.isLeaf;
+  sourceNode.bb = BoundingBox();
 
   // children from sourceNode are move to entries
-  auto iter = sourceNode.children.begin();
-  while (iter != sourceNode.children.end()) {
-    entries.push_back(std::move(*iter));
-    iter = sourceNode.children.erase(iter);
-  }
+  moveAllRTreeNode(sourceNode.children, entries);
 
   // Pick first entry for each group
   auto bestPair = pickSeeds();
 
   // Creating the two groups by moving each element of the pair
+  auto& bestNode1 = **bestPair.first;
+  auto& bestNode2 = **bestPair.second;
   moveEntryTo(bestPair.first, destNode1);
   moveEntryTo(bestPair.second, destNode2);
+  destNode1.bb = bestNode1.bb;
+  destNode2.bb = bestNode2.bb;
 
   // Check if done
   while (!entries.empty()) {

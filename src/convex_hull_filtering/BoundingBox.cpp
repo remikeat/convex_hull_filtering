@@ -3,8 +3,10 @@
 #include "convex_hull_filtering/BoundingBox.hpp"
 
 #include <cmath>
+#include <stdexcept>
 #include <vector>
 
+#include "convex_hull_filtering/Config.hpp"
 #include "convex_hull_filtering/Point.hpp"
 
 namespace convex_hull_filtering {
@@ -15,18 +17,24 @@ BoundingBox::BoundingBox(const Point& min, const Point max)
     : min(min), max(max) {}
 
 BoundingBox::BoundingBox(const std::vector<Point>& points) {
-  for (const auto& p : points) {
-    if (p.x < min.x) {
-      min.x = p.x;
-    }
-    if (p.y < min.y) {
-      min.y = p.y;
-    }
-    if (p.x > max.x) {
-      max.x = p.x;
-    }
-    if (p.y > max.y) {
-      max.y = p.y;
+  if (!points.empty()) {
+    min.x = points[0].x;
+    min.y = points[0].y;
+    max.x = points[0].x;
+    max.y = points[0].y;
+    for (const auto& p : points) {
+      if (p.x < min.x) {
+        min.x = p.x;
+      }
+      if (p.y < min.y) {
+        min.y = p.y;
+      }
+      if (p.x > max.x) {
+        max.x = p.x;
+      }
+      if (p.y > max.y) {
+        max.y = p.y;
+      }
     }
   }
 }
@@ -52,8 +60,19 @@ bool BoundingBox::intersection(const BoundingBox& b) const {
 }
 
 BoundingBox BoundingBox::getUnion(const BoundingBox& b) const {
-  return BoundingBox(
-      Point(std::fmin(min.x, b.min.x), std::fmin(min.y, b.min.y)),
-      Point(std::fmax(max.x, b.max.x), std::fmax(max.y, b.max.y)));
+  float areaA = getArea();
+  float areaB = b.getArea();
+  if (areaA > EPSILON && areaB > EPSILON) {
+    return BoundingBox(
+        Point(std::fmin(min.x, b.min.x), std::fmin(min.y, b.min.y)),
+        Point(std::fmax(max.x, b.max.x), std::fmax(max.y, b.max.y)));
+  }
+  if (areaA > EPSILON) {
+    return *this;
+  }
+  if (areaB > EPSILON) {
+    return b;
+  }
+  throw std::runtime_error("Both bounding box shouldnt't of null area");
 }
 }  // namespace convex_hull_filtering

@@ -22,7 +22,7 @@ class RTree {
   RTreeNode treeRoot;
 
  private:
-  std::list<std::unique_ptr<RTreeNode> > nodesToAdd;
+  RTreeNodePtrList nodesToAdd;
   int m;  // Min number of children
   int M;  // Max number of children
   Spliter spliter;

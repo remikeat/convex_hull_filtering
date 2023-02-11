@@ -23,7 +23,7 @@ Point ConvexHull::getCircPoint(int index) const {
 float ConvexHull::getArea() const {
   std::size_t nbPointsP = points.size();
   float area = 0.0f;
-  for (auto i = 1; i <= nbPointsP; i++) {
+  for (std::size_t i = 1; i <= nbPointsP; i++) {
     Point p = getCircPoint(i);
     Point pm = getCircPoint(i - 1);
     area += (pm.x + p.x) * (pm.y - p.y);
@@ -35,7 +35,7 @@ bool ConvexHull::isPointInside(const Point& pt) const {
   float sumAngles = 0.0f;
   std::size_t nbPointsP = points.size();
 
-  for (auto i = 1; i <= nbPointsP; i++) {
+  for (std::size_t i = 1; i <= nbPointsP; i++) {
     Edge pDot(getCircPoint(i - 1), getCircPoint(i));
     sumAngles += pDot.getAngle(pt);
   }
@@ -107,7 +107,7 @@ std::pair<bool, ConvexHull> ConvexHull::intersection(
   int Qdirection =
       Edge(Q.points[0], Q.points[1]).belongToHalfPlane(Q.points[2]) ? 1 : -1;
 
-  for (auto i = 0; i < 2 * (nbPointsP + nbPointsQ); i++) {
+  for (std::size_t i = 0; i < 2 * (nbPointsP + nbPointsQ); i++) {
     // Check to see if pDot and qDot intersect
     Point p = getCircPoint(curIdxP);
     Point q = Q.getCircPoint(curIdxQ);

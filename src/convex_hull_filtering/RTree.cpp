@@ -13,10 +13,10 @@ namespace convex_hull_filtering {
 RTree::RTree(int m, int M) : m(m), M(M), spliter(nodesToAdd) {}
 
 void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
-  nodesToAdd.push_back(std::make_unique<RTreeNode>());
-  auto newNode = nodesToAdd.rbegin();
-  (*newNode)->value = value;
-  (*newNode)->bb = boundingBox;
+  auto newNodeIter = makeNewRTreeNode(nodesToAdd);
+  auto& newNode = **newNodeIter;
+  newNode.value = value;
+  newNode.bb = boundingBox;
 
   // Find position for new record
   RTreeNode& chosenLeaf = chooseLeaf(boundingBox);
@@ -24,10 +24,10 @@ void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
   // Add record to leaf node
   if (chosenLeaf.children.size() < M) {
     auto newNodeIter = nodesToAdd.begin();
-    (*newNodeIter)->parent = &chosenLeaf;
-    chosenLeaf.bb = chosenLeaf.bb.getUnion((*newNodeIter)->bb);
-    chosenLeaf.children.push_back(std::move(*newNodeIter));
-    newNodeIter = nodesToAdd.erase(newNodeIter);
+    auto& newNode = **newNodeIter;
+    newNode.parent = &chosenLeaf;
+    chosenLeaf.bb = chosenLeaf.bb.getUnion(newNode.bb);
+    newNodeIter = moveRTreeNode(nodesToAdd, newNodeIter, chosenLeaf.children);
   } else {
     spliter.splitNode(m, chosenLeaf);
   }
@@ -37,26 +37,24 @@ void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
 
   // Grow tree taller
   if (!nodesToAdd.empty()) {
-    nodesToAdd.push_front(std::make_unique<RTreeNode>());
-    auto newNode = nodesToAdd.begin();
+    auto newNodeIter = makeNewRTreeNode(nodesToAdd);
+    auto& newNode = **newNodeIter;
 
     // Copy current root to new node
-    (*newNode)->value = treeRoot.value;
-    (*newNode)->isLeaf = treeRoot.isLeaf;
-    (*newNode)->bb = treeRoot.bb;
-    auto childIter = treeRoot.children.begin();
-    while (childIter != treeRoot.children.end()) {
-      (*newNode)->children.push_back(std::move(*childIter));
-      childIter = treeRoot.children.erase(childIter);
-    }
+    newNode.value = treeRoot.value;
+    newNode.isLeaf = treeRoot.isLeaf;
+    newNode.bb = treeRoot.bb;
+
+    moveAllRTreeNode(treeRoot.children, newNode.children);
 
     auto nodeIter = nodesToAdd.begin();
-    treeRoot.bb = BoundingBox();
+    auto& node = **nodeIter;
+    treeRoot.bb = node.bb;
     while (nodeIter != nodesToAdd.end()) {
-      (*nodeIter)->parent = &treeRoot;
-      treeRoot.bb = treeRoot.bb.getUnion((*nodeIter)->bb);
-      treeRoot.children.push_back(std::move(*nodeIter));
-      nodeIter = nodesToAdd.erase(nodeIter);
+      auto& node = **nodeIter;
+      node.parent = &treeRoot;
+      treeRoot.bb = treeRoot.bb.getUnion(node.bb);
+      nodeIter = moveRTreeNode(nodesToAdd, nodeIter, treeRoot.children);
     }
     treeRoot.isLeaf = false;
     treeRoot.value = -1;
@@ -73,17 +71,19 @@ RTreeNode& RTree::chooseLeaf(const BoundingBox& boundingBox) {
 
     // Chose subtree
     auto iter = N.children.begin();
-    auto best = iter;
-    float minArea = (*iter)->bb.getUnion(boundingBox).getArea();
+    auto bestIter = iter;
+    auto& node = **iter;
+    float minArea = node.bb.getUnion(boundingBox).getArea();
     for (++iter; iter != N.children.end(); ++iter) {
-      float area = (*iter)->bb.getUnion(boundingBox).getArea();
+      auto& node = **iter;
+      float area = node.bb.getUnion(boundingBox).getArea();
       if (area < minArea) {
-        best = iter;
+        bestIter = iter;
         minArea = area;
       }
     }
     // Descend until a leaf is reached
-    return recurse(*(*best), boundingBox);
+    return recurse(**bestIter, boundingBox);
   };
 
   // Initialize
@@ -103,10 +103,10 @@ void RTree::adjustTree(const RTreeNode& L) {
   if (!nodesToAdd.empty()) {
     if (N.parent->children.size() < M) {
       auto iter = nodesToAdd.begin();
-      (*iter)->parent = N.parent;
-      N.parent->bb = N.parent->bb.getUnion((*iter)->bb);
-      N.parent->children.push_back(std::move(*iter));
-      iter = nodesToAdd.erase(iter);
+      auto& node = **iter;
+      node.parent = N.parent;
+      N.parent->bb = N.parent->bb.getUnion((node.bb));
+      iter = moveRTreeNode(nodesToAdd, iter, N.parent->children);
     } else {
       spliter.splitNode(m, *N.parent);
     }

@@ -12,7 +12,10 @@ convex_hull_filtering_module = Extension('convex_hull_filtering',
                                              'src/convex_hull_filtering/BoundingBox.cpp',
                                              'src/convex_hull_filtering/ConvexHull.cpp',
                                              'src/convex_hull_filtering/Edge.cpp',
-                                             'src/convex_hull_filtering/Point.cpp'],
+                                             'src/convex_hull_filtering/Point.cpp',
+                                             'src/convex_hull_filtering/RTree.cpp',
+                                             'src/convex_hull_filtering/RTreeNode.cpp',
+                                             'src/convex_hull_filtering/Spliter.cpp'],
                                          include_dirs=[
                                              'include'
                                          ]

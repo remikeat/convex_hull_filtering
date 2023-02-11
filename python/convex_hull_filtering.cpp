@@ -6,6 +6,7 @@
 
 #include "convex_hull_filtering/ConvexHull.hpp"
 #include "convex_hull_filtering/Point.hpp"
+#include "convex_hull_filtering/RTree.hpp"
 #include "numpy/arrayobject.h"
 
 namespace chf = convex_hull_filtering;
@@ -15,14 +16,16 @@ std::vector<chf::Point> convertToCpp(PyArrayObject* arr) {
   npy_intp* dims = PyArray_DIMS(arr);
   if (PyArray_TYPE(arr) == NPY_DOUBLE) {
     int nbRows = dims[0u];
-    for (auto i = 0; i < nbRows; i++) {
-      double* x = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u));
-      double* y = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 1u));
-      points.push_back(chf::Point(*x, *y));
+    if (dims[1u] == 2) {
+      for (auto i = 0; i < nbRows; i++) {
+        double* x = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u));
+        double* y = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 1u));
+        points.push_back(chf::Point(*x, *y));
+      }
+      return points;
     }
-  } else {
-    PyErr_SetString(PyExc_ValueError, "data is not float");
   }
+  PyErr_SetString(PyExc_ValueError, "ERROR: data is not a (N,2) double matrix");
   return points;
 }
 
@@ -32,7 +35,7 @@ PyObject* convertToPython(const std::vector<chf::Point>& points) {
   dims[1u] = 2u;
   PyObject* ret = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
   PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(ret);
-  for (auto i = 0; i < points.size(); i++) {
+  for (std::size_t i = 0; i < points.size(); i++) {
     double* x = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u));
     double* y = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 1u));
     *x = points[i].x;
@@ -47,6 +50,7 @@ static PyObject* ConvexHull_intersection(PyObject* self, PyObject* args) {
 
   if (!PyArg_ParseTuple(args, "O!O!", &PyArray_Type, &arr1, &PyArray_Type,
                         &arr2)) {
+    PyErr_SetString(PyExc_ValueError, "ERROR: when parsing tuple");
     return NULL;
   }
 
@@ -64,6 +68,7 @@ static PyObject* ConvexHull_getArea(PyObject* self, PyObject* args) {
   PyArrayObject* arr = NULL;
 
   if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr)) {
+    PyErr_SetString(PyExc_ValueError, "ERROR: when parsing tuple");
     return NULL;
   }
 
@@ -73,10 +78,68 @@ static PyObject* ConvexHull_getArea(PyObject* self, PyObject* args) {
   return Py_BuildValue("d", area);
 }
 
+static PyObject* RTree_insertEntry(PyObject* self, PyObject* args) {
+  PyArrayObject* arr = NULL;
+
+  if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr)) {
+    PyErr_SetString(PyExc_ValueError, "ERROR: when parsing tuple");
+    return NULL;
+  }
+
+  chf::RTree rtree(1, 3);
+
+  npy_intp* dims = PyArray_DIMS(arr);
+  if (PyArray_TYPE(arr) == NPY_DOUBLE) {
+    int nbRows = dims[0u];
+    if (dims[1u] == 5) {
+      for (auto i = 0; i < nbRows; i++) {
+        double* value = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u));
+        double* minX = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 1u));
+        double* minY = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 2u));
+        double* maxX = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 3u));
+        double* maxY = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 4u));
+
+        rtree.insertEntry(std::ceil(*value),
+                          chf::BoundingBox(chf::Point(*minX, *minY),
+                                           chf::Point(*maxX, *maxY)));
+      }
+    }
+  }
+
+  std::function<PyObject*(chf::RTreeNode&)> traverseTree =
+      [&](chf::RTreeNode& node) -> PyObject* {
+    PyObject* pyChildren = PyList_New(0);
+    for (auto& child : node.children) {
+      PyObject* pyChild = traverseTree(*child);
+      PyList_Append(pyChildren, pyChild);
+    }
+    return Py_BuildValue("{s:i,s:[d,d,d,d],s:O}", "value", node.value, "bb",
+                         node.bb.min.x, node.bb.min.y, node.bb.max.x,
+                         node.bb.max.y, "children", pyChildren);
+  };
+
+  return traverseTree(rtree.treeRoot);
+}
+
+static PyObject* BoundingBox(PyObject* self, PyObject* args) {
+  PyArrayObject* arr = NULL;
+
+  if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr)) {
+    PyErr_SetString(PyExc_ValueError, "ERROR: when parsing tuple");
+    return NULL;
+  }
+
+  chf::BoundingBox bb(convertToCpp(arr));
+
+  return Py_BuildValue("[d,d,d,d]", bb.min.x, bb.min.y, bb.max.x, bb.max.y);
+}
+
 static PyMethodDef chfMethods[] = {
     {"intersection", ConvexHull_intersection, METH_VARARGS,
      "Convex hull intersection"},
     {"getArea", ConvexHull_getArea, METH_VARARGS, "Convex hull getArea"},
+    {"insertEntry", RTree_insertEntry, METH_VARARGS, "Build RTree"},
+    {"boundingBox", BoundingBox, METH_VARARGS, "Build BoundinbBox"},
     {NULL, NULL, 0, NULL}};
 
 static struct PyModuleDef convexHullFilteringModule = {

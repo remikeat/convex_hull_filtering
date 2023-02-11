@@ -14,20 +14,17 @@
 namespace convex_hull_filtering {
 class Spliter {
  public:
-  explicit Spliter(std::list<std::unique_ptr<RTreeNode> >& nodesToAdd);
+  explicit Spliter(RTreeNodePtrList& nodesToAdd);
   bool splitNode(int m, RTreeNode& sourceNode);
 
  private:
-  void moveEntryTo(const std::list<std::unique_ptr<RTreeNode> >::iterator& iter,
-                   RTreeNode& destNode);
-  std::pair<std::list<std::unique_ptr<RTreeNode> >::iterator,
-            std::list<std::unique_ptr<RTreeNode> >::iterator>
-  pickSeeds();
-  std::pair<float, std::list<std::unique_ptr<RTreeNode> >::iterator> pickNext(
+  void moveEntryTo(const RTreeNodePtrList::iterator& iter, RTreeNode& destNode);
+  std::pair<RTreeNodePtrList::iterator, RTreeNodePtrList::iterator> pickSeeds();
+  std::pair<float, RTreeNodePtrList::iterator> pickNext(
       const RTreeNode& destNode1, const RTreeNode& destNode2);
 
-  std::list<std::unique_ptr<RTreeNode> > entries;
-  std::list<std::unique_ptr<RTreeNode> >& nodesToAdd;
+  RTreeNodePtrList entries;
+  RTreeNodePtrList& nodesToAdd;
 };
 }  // namespace convex_hull_filtering
 

@@ -11,6 +11,11 @@
 
 namespace convex_hull_filtering {
 
+class RTreeNode;
+
+using RTreeNodePtr = std::unique_ptr<RTreeNode>;
+using RTreeNodePtrList = std::list<RTreeNodePtr>;
+
 class RTreeNode {
  public:
   RTreeNode();
@@ -20,8 +25,16 @@ class RTreeNode {
   int value;
   BoundingBox bb;
   RTreeNode* parent;
-  std::list<std::unique_ptr<RTreeNode> > children;
+  RTreeNodePtrList children;
 };
+
+RTreeNodePtrList::iterator moveRTreeNode(RTreeNodePtrList& source,
+                                         const RTreeNodePtrList::iterator& iter,
+                                         RTreeNodePtrList& dest);
+void moveAllRTreeNode(RTreeNodePtrList& source, RTreeNodePtrList& dest);
+
+RTreeNodePtrList::iterator makeNewRTreeNode(RTreeNodePtrList& list);
+
 }  // namespace convex_hull_filtering
 
 #endif  // INCLUDE_CONVEX_HULL_FILTERING_RTREENODE_HPP_
