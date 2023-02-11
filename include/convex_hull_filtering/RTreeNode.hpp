@@ -1,4 +1,5 @@
 /* Copyright 2023 Remi KEAT */
+// This code follows Google C++ Style Guide.
 
 #ifndef INCLUDE_CONVEX_HULL_FILTERING_RTREENODE_HPP_
 #define INCLUDE_CONVEX_HULL_FILTERING_RTREENODE_HPP_
@@ -33,7 +34,6 @@ RTreeNodePtrList::iterator moveRTreeNode(RTreeNodePtrList* source,
                                          const RTreeNodePtrList::iterator& iter,
                                          RTreeNodePtrList* dest);
 void moveAllRTreeNode(RTreeNodePtrList* source, RTreeNodePtrList* dest);
-
 RTreeNodePtrList::iterator makeNewRTreeNode(RTreeNodePtrList* list,
                                             const BoundingBox& bb);
 

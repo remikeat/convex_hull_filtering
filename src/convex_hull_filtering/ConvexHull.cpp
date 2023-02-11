@@ -1,4 +1,5 @@
 /* Copyright 2023 Remi KEAT */
+// This code follows Google C++ Style Guide.
 
 #include "convex_hull_filtering/ConvexHull.hpp"
 
@@ -11,7 +12,8 @@
 
 namespace convex_hull_filtering {
 
-ConvexHull::ConvexHull(const std::vector<Point>& points) : points(points) {}
+ConvexHull::ConvexHull(const std::vector<Point>& points, int id)
+    : points(points) {}
 
 Point ConvexHull::getCircPoint(int index) const {
   int n = points.size();

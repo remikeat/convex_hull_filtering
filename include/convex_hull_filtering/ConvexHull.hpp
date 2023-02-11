@@ -1,4 +1,5 @@
 /* Copyright 2023 Remi KEAT */
+// This code follows Google C++ Style Guide.
 
 #ifndef INCLUDE_CONVEX_HULL_FILTERING_CONVEXHULL_HPP_
 #define INCLUDE_CONVEX_HULL_FILTERING_CONVEXHULL_HPP_
@@ -18,12 +19,13 @@ constexpr char Q_POLY = 'Q';
 
 class ConvexHull {
  public:
-  explicit ConvexHull(const std::vector<Point>& points);
+  explicit ConvexHull(const std::vector<Point>& points, int id = 0);
   Point getCircPoint(int index) const;
   float getArea() const;
   bool isPointInside(const Point& pt) const;
   std::pair<bool, ConvexHull> intersection(const ConvexHull& Q) const;
 
+  int id;
   std::vector<Point> points;
 
  private:

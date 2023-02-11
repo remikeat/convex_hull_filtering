@@ -1,4 +1,5 @@
 /* Copyright 2023 Remi KEAT */
+// This code follows Google C++ Style Guide.
 
 #ifndef INCLUDE_CONVEX_HULL_FILTERING_CONFIG_HPP_
 #define INCLUDE_CONVEX_HULL_FILTERING_CONFIG_HPP_

@@ -1,4 +1,5 @@
 /* Copyright 2023 Remi KEAT */
+// This code follows Google C++ Style Guide.
 
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
