@@ -14,7 +14,7 @@ class BoundingBox {
   BoundingBox(const Point& min, const Point max);
   explicit BoundingBox(const std::vector<Point>& points);
   float getArea() const;
-  bool intersection(const BoundingBox& b) const;
+  bool intersect(const BoundingBox& b) const;
   BoundingBox getUnion(const BoundingBox& b) const;
 
   Point min;

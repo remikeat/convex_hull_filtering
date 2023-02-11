@@ -6,10 +6,10 @@
 
 namespace chf = convex_hull_filtering;
 
-TEST(BoundingBox, intersection) {
+TEST(BoundingBox, intersect) {
   chf::BoundingBox a(
       {chf::Point(0.0f, 0.0f), chf::Point(1.0, 0.0f), chf::Point(1.0f, 1.0f)});
   chf::BoundingBox b(
       {chf::Point(0.5f, 0.5f), chf::Point(1.0, 1.0f), chf::Point(0.0f, 1.0f)});
-  EXPECT_TRUE(a.intersection(b));
+  EXPECT_TRUE(a.intersect(b));
 }

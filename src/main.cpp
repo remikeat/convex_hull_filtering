@@ -73,4 +73,12 @@ int main(int argc, char* argv[]) {
     std::cout << std::string(50, '-') << std::endl;
     idx++;
   }
+  for (const auto& convexHull : convexHulls) {
+    chf::BoundingBox bb(convexHull.points);
+    auto res = rtree.searchOverlaps(bb);
+    for (auto r : res) {
+      std::cout << r << " ";
+    }
+    std::cout << std::endl;
+  }
 }

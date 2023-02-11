@@ -19,6 +19,11 @@ entries = np.matrix([[0.0, 0.0, 0.0, 1.0, 1.0],
                      [4.0, 4.0, 4.0, 5.0, 5.0],
                      [5.0, 5.0, 5.0, 6.0, 6.0]])
 
-res = insertEntry(entries)
+res = insertEntry(1, 3, entries)
 
+print(res)
+
+print(entries[:, 1:5])
+
+res = searchOverlaps(1, 3, entries, entries[:, 1:5])
 print(res)

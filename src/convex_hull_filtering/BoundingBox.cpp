@@ -41,7 +41,7 @@ BoundingBox::BoundingBox(const std::vector<Point>& points) {
 
 float BoundingBox::getArea() const { return (max.x - min.x) * (max.y - min.y); }
 
-bool BoundingBox::intersection(const BoundingBox& b) const {
+bool BoundingBox::intersect(const BoundingBox& b) const {
   // Separating Axis Theorem
   // case 1: A is left of B
   // case 2: A is right of B

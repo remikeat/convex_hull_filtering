@@ -12,6 +12,28 @@
 namespace convex_hull_filtering {
 RTree::RTree(int m, int M) : m(m), M(M), spliter(nodesToAdd) {}
 
+std::vector<int> RTree::searchOverlaps(const BoundingBox& boundingBox) {
+  std::vector<int> intersections;
+
+  std::function<void(const RTreeNode&)> recurse =
+      [&recurse, &boundingBox, &intersections](const RTreeNode& node) {
+        if (node.children.empty()) {
+          intersections.push_back(node.value);
+        }
+        for (const auto& childIter : node.children) {
+          const auto& child = *childIter;
+          if (child.bb.intersect(boundingBox)) {
+            recurse(child);
+          }
+        }
+      };
+
+  if (treeRoot.bb.intersect(boundingBox)) {
+    recurse(treeRoot);
+  }
+  return intersections;
+}
+
 void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
   auto newNodeIter = makeNewRTreeNode(nodesToAdd, boundingBox);
   auto& newNode = **newNodeIter;

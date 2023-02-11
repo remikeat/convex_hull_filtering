@@ -15,6 +15,7 @@ namespace convex_hull_filtering {
 class RTree {
  public:
   RTree(int m, int M);
+  std::vector<int> searchOverlaps(const BoundingBox& boundingBox);
   void insertEntry(int value, const BoundingBox& BoundingBox);
   RTreeNode& chooseLeaf(const BoundingBox& boundingBox);
   void adjustTree(const RTreeNode& L);
