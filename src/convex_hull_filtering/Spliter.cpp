@@ -12,14 +12,14 @@
 
 namespace convex_hull_filtering {
 
-Spliter::Spliter(RTreeNodePtrList& nodesToAdd) : nodesToAdd(nodesToAdd) {}
+Spliter::Spliter(RTreeNodePtrList* nodesToAdd) : nodesToAdd(nodesToAdd) {}
 
 void Spliter::moveEntryTo(const RTreeNodePtrList::iterator& iter,
-                          RTreeNode& destNode) {
+                          RTreeNode* destNode) {
   auto& node = **iter;
-  node.parent = &destNode;
-  destNode.bb = destNode.bb.getUnion(node.bb);
-  moveRTreeNode(entries, iter, destNode.children);
+  node.parent = destNode;
+  destNode->bb = destNode->bb.getUnion(node.bb);
+  moveRTreeNode(&entries, iter, &destNode->children);
 }
 
 std::pair<RTreeNodePtrList::iterator, RTreeNodePtrList::iterator>
@@ -88,26 +88,26 @@ std::pair<float, RTreeNodePtrList::iterator> Spliter::pickNext(
   return std::make_pair(preferenceForDestNode1, bestIter);
 }
 
-bool Spliter::splitNode(int m, RTreeNode& sourceNode) {
-  if (sourceNode.children.size() < 2) {
+bool Spliter::splitNode(int m, RTreeNode* sourceNode) {
+  if (sourceNode->children.size() < 2) {
     return false;
   }
 
   // There shouldn't be more than one node in nodesToAdd
-  if (nodesToAdd.size() > 1) {
+  if (nodesToAdd->size() > 1) {
     throw std::runtime_error("There shouldn't be more than one node to add");
   }
 
   // Usually a split is initiated when we wanted
   // to add a Node but it wasn't possible
   // so add the node to the entries too
-  if (!nodesToAdd.empty()) {
-    auto iter = nodesToAdd.begin();
-    iter = moveRTreeNode(nodesToAdd, iter, entries);
+  if (!nodesToAdd->empty()) {
+    auto iter = nodesToAdd->begin();
+    iter = moveRTreeNode(nodesToAdd, iter, &entries);
   }
 
   // children from sourceNode are move to entries
-  moveAllRTreeNode(sourceNode.children, entries);
+  moveAllRTreeNode(&sourceNode->children, &entries);
 
   // Pick first entry for each group
   auto bestPair = pickSeeds();
@@ -117,7 +117,7 @@ bool Spliter::splitNode(int m, RTreeNode& sourceNode) {
   auto& bestNode2 = **bestPair.second;
 
   // Create new node to store the newly split node
-  RTreeNode& destNode1 = sourceNode;
+  RTreeNode& destNode1 = *sourceNode;
   RTreeNode& destNode2 = **makeNewRTreeNode(nodesToAdd, bestNode2.bb);
 
   // Copy some node of the source node properties and reset source node
@@ -125,8 +125,8 @@ bool Spliter::splitNode(int m, RTreeNode& sourceNode) {
   destNode2.isLeaf = destNode1.isLeaf;
   destNode1.bb = bestNode1.bb;
 
-  moveEntryTo(bestPair.first, destNode1);
-  moveEntryTo(bestPair.second, destNode2);
+  moveEntryTo(bestPair.first, &destNode1);
+  moveEntryTo(bestPair.second, &destNode2);
   destNode1.bb = bestNode1.bb;
   destNode2.bb = bestNode2.bb;
 
@@ -137,17 +137,17 @@ bool Spliter::splitNode(int m, RTreeNode& sourceNode) {
     auto size2 = destNode2.children.size();
     if (size1 < m || size2 < m) {
       if (size1 < size2) {
-        moveEntryTo(iter, destNode1);
+        moveEntryTo(iter, &destNode1);
       } else {
-        moveEntryTo(iter, destNode2);
+        moveEntryTo(iter, &destNode2);
       }
     } else {
       // Select entry to assign
       auto [preferenceFordestNode1, bestIter] = pickNext(destNode1, destNode2);
       if (preferenceFordestNode1 >= 0) {
-        moveEntryTo(bestIter, destNode1);
+        moveEntryTo(bestIter, &destNode1);
       } else {
-        moveEntryTo(bestIter, destNode2);
+        moveEntryTo(bestIter, &destNode2);
       }
     }
   }

@@ -10,7 +10,7 @@
 #include "convex_hull_filtering/Spliter.hpp"
 
 namespace convex_hull_filtering {
-RTree::RTree(int m, int M) : m(m), M(M), spliter(nodesToAdd) {}
+RTree::RTree(int m, int M) : m(m), M(M), spliter(&nodesToAdd) {}
 
 std::vector<int> RTree::searchOverlaps(const BoundingBox& boundingBox) {
   std::vector<int> intersections;
@@ -35,7 +35,7 @@ std::vector<int> RTree::searchOverlaps(const BoundingBox& boundingBox) {
 }
 
 void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
-  auto newNodeIter = makeNewRTreeNode(nodesToAdd, boundingBox);
+  auto newNodeIter = makeNewRTreeNode(&nodesToAdd, boundingBox);
   auto& newNode = **newNodeIter;
   newNode.value = value;
 
@@ -48,9 +48,9 @@ void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
     auto& newNode = **newNodeIter;
     newNode.parent = &chosenLeaf;
     chosenLeaf.bb = chosenLeaf.bb.getUnion(newNode.bb);
-    newNodeIter = moveRTreeNode(nodesToAdd, newNodeIter, chosenLeaf.children);
+    newNodeIter = moveRTreeNode(&nodesToAdd, newNodeIter, &chosenLeaf.children);
   } else {
-    spliter.splitNode(m, chosenLeaf);
+    spliter.splitNode(m, &chosenLeaf);
   }
 
   // Propagate changes upward
@@ -58,14 +58,14 @@ void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
 
   // Grow tree taller
   if (!nodesToAdd.empty()) {
-    auto newNodeIter = makeNewRTreeNode(nodesToAdd, treeRoot.bb);
+    auto newNodeIter = makeNewRTreeNode(&nodesToAdd, treeRoot.bb);
     auto& newNode = **newNodeIter;
 
     // Copy current root to new node
     newNode.value = treeRoot.value;
     newNode.isLeaf = treeRoot.isLeaf;
 
-    moveAllRTreeNode(treeRoot.children, newNode.children);
+    moveAllRTreeNode(&treeRoot.children, &newNode.children);
 
     auto nodeIter = nodesToAdd.begin();
     auto& node = **nodeIter;
@@ -75,7 +75,7 @@ void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
       auto& node = **nodeIter;
       node.parent = &treeRoot;
       treeRoot.bb = treeRoot.bb.getUnion(node.bb);
-      nodeIter = moveRTreeNode(nodesToAdd, nodeIter, treeRoot.children);
+      nodeIter = moveRTreeNode(&nodesToAdd, nodeIter, &treeRoot.children);
     }
     treeRoot.isLeaf = false;
     treeRoot.value = -1;
@@ -130,9 +130,9 @@ void RTree::adjustTree(const RTreeNode& L) {
       auto& node = **iter;
       node.parent = N.parent;
       N.parent->bb = N.parent->bb.getUnion((node.bb));
-      iter = moveRTreeNode(nodesToAdd, iter, N.parent->children);
+      iter = moveRTreeNode(&nodesToAdd, iter, &N.parent->children);
     } else {
-      spliter.splitNode(m, *N.parent);
+      spliter.splitNode(m, N.parent);
     }
   }
   // Move up to next level

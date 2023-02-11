@@ -6,6 +6,7 @@
 #include <functional>
 #include <list>
 #include <memory>
+#include <vector>
 
 #include "convex_hull_filtering/RTreeNode.hpp"
 #include "convex_hull_filtering/Spliter.hpp"

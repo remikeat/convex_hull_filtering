@@ -19,7 +19,7 @@ using RTreeNodePtrList = std::list<RTreeNodePtr>;
 class RTreeNode {
  public:
   RTreeNode();
-  RTreeNode(const BoundingBox& bb);
+  explicit RTreeNode(const BoundingBox& bb);
   bool isRoot() const;
 
   bool isLeaf;
@@ -29,12 +29,12 @@ class RTreeNode {
   RTreeNodePtrList children;
 };
 
-RTreeNodePtrList::iterator moveRTreeNode(RTreeNodePtrList& source,
+RTreeNodePtrList::iterator moveRTreeNode(RTreeNodePtrList* source,
                                          const RTreeNodePtrList::iterator& iter,
-                                         RTreeNodePtrList& dest);
-void moveAllRTreeNode(RTreeNodePtrList& source, RTreeNodePtrList& dest);
+                                         RTreeNodePtrList* dest);
+void moveAllRTreeNode(RTreeNodePtrList* source, RTreeNodePtrList* dest);
 
-RTreeNodePtrList::iterator makeNewRTreeNode(RTreeNodePtrList& list,
+RTreeNodePtrList::iterator makeNewRTreeNode(RTreeNodePtrList* list,
                                             const BoundingBox& bb);
 
 }  // namespace convex_hull_filtering
