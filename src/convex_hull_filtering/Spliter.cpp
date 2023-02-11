@@ -106,15 +106,6 @@ bool Spliter::splitNode(int m, RTreeNode& sourceNode) {
     iter = moveRTreeNode(nodesToAdd, iter, entries);
   }
 
-  // Create new node to store the newly split node
-  RTreeNode& destNode1 = sourceNode;
-  RTreeNode& destNode2 = **makeNewRTreeNode(nodesToAdd);
-
-  // Copy some node of the source node properties and reset source node
-  destNode2.value = destNode1.value;
-  destNode2.isLeaf = destNode1.isLeaf;
-  sourceNode.bb = BoundingBox();
-
   // children from sourceNode are move to entries
   moveAllRTreeNode(sourceNode.children, entries);
 
@@ -124,6 +115,16 @@ bool Spliter::splitNode(int m, RTreeNode& sourceNode) {
   // Creating the two groups by moving each element of the pair
   auto& bestNode1 = **bestPair.first;
   auto& bestNode2 = **bestPair.second;
+
+  // Create new node to store the newly split node
+  RTreeNode& destNode1 = sourceNode;
+  RTreeNode& destNode2 = **makeNewRTreeNode(nodesToAdd, bestNode2.bb);
+
+  // Copy some node of the source node properties and reset source node
+  destNode2.value = destNode1.value;
+  destNode2.isLeaf = destNode1.isLeaf;
+  destNode1.bb = bestNode1.bb;
+
   moveEntryTo(bestPair.first, destNode1);
   moveEntryTo(bestPair.second, destNode2);
   destNode1.bb = bestNode1.bb;

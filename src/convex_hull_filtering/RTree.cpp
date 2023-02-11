@@ -13,10 +13,9 @@ namespace convex_hull_filtering {
 RTree::RTree(int m, int M) : m(m), M(M), spliter(nodesToAdd) {}
 
 void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
-  auto newNodeIter = makeNewRTreeNode(nodesToAdd);
+  auto newNodeIter = makeNewRTreeNode(nodesToAdd, boundingBox);
   auto& newNode = **newNodeIter;
   newNode.value = value;
-  newNode.bb = boundingBox;
 
   // Find position for new record
   RTreeNode& chosenLeaf = chooseLeaf(boundingBox);
@@ -37,19 +36,19 @@ void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
 
   // Grow tree taller
   if (!nodesToAdd.empty()) {
-    auto newNodeIter = makeNewRTreeNode(nodesToAdd);
+    auto newNodeIter = makeNewRTreeNode(nodesToAdd, treeRoot.bb);
     auto& newNode = **newNodeIter;
 
     // Copy current root to new node
     newNode.value = treeRoot.value;
     newNode.isLeaf = treeRoot.isLeaf;
-    newNode.bb = treeRoot.bb;
 
     moveAllRTreeNode(treeRoot.children, newNode.children);
 
     auto nodeIter = nodesToAdd.begin();
     auto& node = **nodeIter;
     treeRoot.bb = node.bb;
+
     while (nodeIter != nodesToAdd.end()) {
       auto& node = **nodeIter;
       node.parent = &treeRoot;
@@ -99,6 +98,9 @@ void RTree::adjustTree(const RTreeNode& L) {
   }
   // Adjust covering rectangle in parent entry
   N.parent->bb = N.bb;
+  for (auto& child : N.parent->children) {
+    N.parent->bb = N.parent->bb.getUnion(child->bb);
+  }
   // Propagate node split upward
   if (!nodesToAdd.empty()) {
     if (N.parent->children.size() < M) {

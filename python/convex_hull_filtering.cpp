@@ -81,12 +81,15 @@ static PyObject* ConvexHull_getArea(PyObject* self, PyObject* args) {
 static PyObject* RTree_insertEntry(PyObject* self, PyObject* args) {
   PyArrayObject* arr = NULL;
 
-  if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr)) {
+  int m = 1;
+  int M = 3;
+
+  if (!PyArg_ParseTuple(args, "iiO!", &m, &M, &PyArray_Type, &arr)) {
     PyErr_SetString(PyExc_ValueError, "ERROR: when parsing tuple");
     return NULL;
   }
 
-  chf::RTree rtree(1, 3);
+  chf::RTree rtree(m, M);
 
   npy_intp* dims = PyArray_DIMS(arr);
   if (PyArray_TYPE(arr) == NPY_DOUBLE) {

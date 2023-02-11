@@ -8,6 +8,9 @@ namespace convex_hull_filtering {
 
 RTreeNode::RTreeNode() : isLeaf(true), value(-1), parent(nullptr) {}
 
+RTreeNode::RTreeNode(const BoundingBox& bb)
+    : isLeaf(true), value(-1), bb(bb), parent(nullptr) {}
+
 bool RTreeNode::isRoot() const { return parent == nullptr; }
 
 RTreeNodePtrList::iterator moveRTreeNode(RTreeNodePtrList& source,
@@ -24,8 +27,9 @@ void moveAllRTreeNode(RTreeNodePtrList& source, RTreeNodePtrList& dest) {
   }
 }
 
-RTreeNodePtrList::iterator makeNewRTreeNode(RTreeNodePtrList& list) {
-  list.push_front(std::make_unique<RTreeNode>());
+RTreeNodePtrList::iterator makeNewRTreeNode(RTreeNodePtrList& list,
+                                            const BoundingBox& bb) {
+  list.push_front(std::make_unique<RTreeNode>(bb));
   return list.begin();
 }
 
