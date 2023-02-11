@@ -19,8 +19,9 @@ class RTree {
   RTreeNode& chooseLeaf(const BoundingBox& boundingBox);
   void adjustTree(const RTreeNode& L);
 
- private:
   RTreeNode treeRoot;
+
+ private:
   std::list<std::unique_ptr<RTreeNode> > nodesToAdd;
   int m;  // Min number of children
   int M;  // Max number of children

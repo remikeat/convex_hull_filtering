@@ -37,10 +37,40 @@ int main(int argc, char* argv[]) {
     std::cout << p.x << " " << p.y << std::endl;
   }
 
+  std::cout << std::string(50, '=') << std::endl;
+
+  auto coutBoundingBox = [](const chf::BoundingBox& bb) {
+    std::cout << "(" << bb.min.x << ", " << bb.min.y << ") (" << bb.max.x
+              << ", " << bb.max.y << ")";
+  };
+
+  std::function<void(chf::RTreeNode&, int)> traverseTree =
+      [&](chf::RTreeNode& node, int level) {
+        std::string indent(level * 4, ' ');
+        std::cout << indent << "Value : " << node.value << std::endl;
+        std::cout << indent;
+        coutBoundingBox(node.bb);
+        std::cout << std::endl;
+        std::cout << indent << "isLeaf : " << (node.isLeaf ? "true" : "false")
+                  << std::endl;
+        if (!node.children.empty()) {
+          std::cout << indent << "Children : " << std::endl;
+          for (auto& child : node.children) {
+            traverseTree(*child, level + 1);
+          }
+        }
+      };
+
   chf::RTree rtree(1, 3);
   int idx = 0;
   for (const auto& convexHull : convexHulls) {
-    rtree.insertEntry(idx, chf::BoundingBox(convexHull.points));
+    chf::BoundingBox bb(convexHull.points);
+    std::cout << "Insert ";
+    coutBoundingBox(bb);
+    std::cout << std::endl;
+    rtree.insertEntry(idx, bb);
+    traverseTree(rtree.treeRoot, 0);
+    std::cout << std::string(50, '-') << std::endl;
     idx++;
   }
 }
