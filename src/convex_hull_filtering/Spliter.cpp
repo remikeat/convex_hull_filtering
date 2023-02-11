@@ -55,7 +55,7 @@ Spliter::pickNext(const RTreeNode& destNode1, const RTreeNode& destNode2) {
   float destNode1Area = destNode1.bb.getArea();
   float destNode2Area = destNode2.bb.getArea();
   auto iter = entries.begin();
-  auto best = iter;
+  auto bestIter = iter;
   float maxDiff = 0.0f;
   float preferenceForDestNode1 = 0.0f;
 
@@ -69,7 +69,7 @@ Spliter::pickNext(const RTreeNode& destNode1, const RTreeNode& destNode2) {
     float diff = std::fabs(increase1 - increase2);
     if (diff > maxDiff) {
       maxDiff = diff;
-      best = iter;
+      bestIter = iter;
       // if increase2 > increase1 should prefer node 1
       // so if preferenceForDestNode1 > 0 then prefer node 1
       preferenceForDestNode1 = increase2 - increase1;
@@ -85,7 +85,7 @@ Spliter::pickNext(const RTreeNode& destNode1, const RTreeNode& destNode2) {
         destNode2.children.size() - destNode1.children.size();
   }
 
-  return std::make_pair(preferenceForDestNode1, iter);
+  return std::make_pair(preferenceForDestNode1, bestIter);
 }
 
 bool Spliter::splitNode(int m, RTreeNode& sourceNode) {
@@ -113,6 +113,8 @@ bool Spliter::splitNode(int m, RTreeNode& sourceNode) {
   RTreeNode& destNode1 = sourceNode;
   RTreeNode& destNode2 = *(nodesToAdd.back());
 
+  destNode2.isLeaf = destNode1.isLeaf;
+
   // children from sourceNode are move to entries
   auto iter = sourceNode.children.begin();
   while (iter != sourceNode.children.end()) {
@@ -128,7 +130,7 @@ bool Spliter::splitNode(int m, RTreeNode& sourceNode) {
   moveEntryTo(bestPair.second, destNode2);
 
   // Check if done
-  while (entries.empty()) {
+  while (!entries.empty()) {
     auto iter = entries.begin();
     auto size1 = destNode1.children.size();
     auto size2 = destNode2.children.size();
