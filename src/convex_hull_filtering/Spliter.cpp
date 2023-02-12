@@ -16,12 +16,12 @@ namespace convex_hull_filtering {
 Spliter::Spliter(RTreeNodePtrList* nodesToAdd, int* nodeIdx)
     : nodesToAdd(nodesToAdd), nodeIdx(nodeIdx) {}
 
-void Spliter::moveEntryTo(const RTreeNodePtrList::iterator& iter,
-                          RTreeNode* destNode) {
+RTreeNodePtrList::iterator Spliter::moveEntryTo(
+    const RTreeNodePtrList::iterator& iter, RTreeNode* destNode) {
   auto& node = **iter;
   node.parent = destNode;
   destNode->bb = destNode->bb.getUnion(node.bb);
-  moveRTreeNode(&entries, iter, &destNode->children);
+  return moveRTreeNode(&entries, iter, &destNode->children);
 }
 
 std::pair<RTreeNodePtrList::iterator, RTreeNodePtrList::iterator>
@@ -115,42 +115,43 @@ bool Spliter::splitNode(unsigned int m, RTreeNode* sourceNode) {
   auto bestPair = pickSeeds();
 
   // Creating the two groups by moving each element of the pair
-  auto& bestNode1 = **bestPair.first;
-  auto& bestNode2 = **bestPair.second;
+  auto& bestNode1 = *bestPair.first;
+  auto& bestNode2 = *bestPair.second;
 
   // Create new node to store the newly split node
-  RTreeNode& destNode1 = *sourceNode;
-  RTreeNode& destNode2 = **makeNewRTreeNode(nodesToAdd, bestNode2.bb);
+  RTreeNode* destNode1 = sourceNode;
+  RTreeNode* destNode2 = makeNewRTreeNode(nodesToAdd, bestNode2->bb)->get();
 
   // Copy some node of the source node properties and reset source node
-  destNode2.value = *nodeIdx;
+  destNode2->value = *nodeIdx;
   *nodeIdx = *nodeIdx - 1;
-  destNode2.isLeaf = destNode1.isLeaf;
-  destNode1.bb = bestNode1.bb;
+  destNode2->isLeaf = destNode1->isLeaf;
+  destNode1->bb = bestNode1->bb;
 
-  moveEntryTo(bestPair.first, &destNode1);
-  moveEntryTo(bestPair.second, &destNode2);
-  destNode1.bb = bestNode1.bb;
-  destNode2.bb = bestNode2.bb;
+  destNode1->bb = bestNode1->bb;
+  destNode2->bb = bestNode2->bb;
+  bestPair.first = moveEntryTo(bestPair.first, destNode1);
+  bestPair.second = moveEntryTo(bestPair.second, destNode2);
 
   // Check if done
   while (!entries.empty()) {
     auto iter = entries.begin();
-    unsigned int size1 = destNode1.children.size();
-    unsigned int size2 = destNode2.children.size();
+    unsigned int size1 = destNode1->children.size();
+    unsigned int size2 = destNode2->children.size();
     if (size1 < m || size2 < m) {
       if (size1 < size2) {
-        moveEntryTo(iter, &destNode1);
+        iter = moveEntryTo(iter, destNode1);
       } else {
-        moveEntryTo(iter, &destNode2);
+        iter = moveEntryTo(iter, destNode2);
       }
     } else {
       // Select entry to assign
-      auto [preferenceFordestNode1, bestIter] = pickNext(destNode1, destNode2);
+      auto [preferenceFordestNode1, bestIter] =
+          pickNext(*destNode1, *destNode2);
       if (preferenceFordestNode1 >= 0) {
-        moveEntryTo(bestIter, &destNode1);
+        bestIter = moveEntryTo(bestIter, destNode1);
       } else {
-        moveEntryTo(bestIter, &destNode2);
+        bestIter = moveEntryTo(bestIter, destNode2);
       }
     }
   }

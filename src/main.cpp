@@ -2,6 +2,7 @@
 // This code follows Google C++ Style Guide.
 
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <unordered_set>
 
@@ -66,8 +67,10 @@ void printTree(const chf::RTreeNode& node, int level) {
   std::string indent(level * 4, ' ');
 
   std::cout << indent << "Node  ";
-  std::cout << std::string((3 - level) * 4, ' ');
-  std::cout << "Value : " << std::setw(3) << std::setfill(' ') << node.value;
+  std::cout << std::setw(3) << std::setfill(' ') << node.value;
+  if (level <= 3) {
+    std::cout << std::string((3 - level) * 4 + 1, ' ');
+  }
   std::cout << " | type : " << getNodeType(node) << " | BB : ";
   printBoundingBox(node.bb);
   std::cout << std::endl;

@@ -19,7 +19,8 @@ class Spliter {
   bool splitNode(unsigned int m, RTreeNode* sourceNode);
 
  private:
-  void moveEntryTo(const RTreeNodePtrList::iterator& iter, RTreeNode* destNode);
+  RTreeNodePtrList::iterator moveEntryTo(const RTreeNodePtrList::iterator& iter,
+                                         RTreeNode* destNode);
   std::pair<RTreeNodePtrList::iterator, RTreeNodePtrList::iterator> pickSeeds();
   std::pair<float, RTreeNodePtrList::iterator> pickNext(
       const RTreeNode& destNode1, const RTreeNode& destNode2);
