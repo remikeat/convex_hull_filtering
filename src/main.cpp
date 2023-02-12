@@ -3,23 +3,23 @@
 
 #include <fstream>
 #include <iostream>
-#include <nlohmann/json.hpp>
+#include <unordered_set>
 
 #include "convex_hull_filtering/BoundingBox.hpp"
 #include "convex_hull_filtering/ConvexHull.hpp"
 #include "convex_hull_filtering/Point.hpp"
 #include "convex_hull_filtering/RTree.hpp"
+#include "nlohmann/json.hpp"
 
 namespace chf = convex_hull_filtering;
 using json = nlohmann::json;
 
-std::vector<chf::ConvexHull> loadJson(std::string filePath) {
+std::vector<chf::ConvexHull> loadJson(const std::string& filePath) {
   std::vector<chf::ConvexHull> convexHulls;
 
   std::ifstream ifs(filePath);
   json jf = json::parse(ifs);
 
-  convexHulls.reserve(jf["convex hulls"].size());
   for (const auto& convexHull : jf["convex hulls"]) {
     std::vector<chf::Point> points;
     points.reserve(convexHull["apexes"].size());
@@ -32,35 +32,66 @@ std::vector<chf::ConvexHull> loadJson(std::string filePath) {
   return convexHulls;
 }
 
+json convertToJson(const std::vector<chf::ConvexHull>& convexHulls) {
+  json jConvexHulls;
+  for (const auto& convexHull : convexHulls) {
+    json jApexes;
+    for (const auto& point : convexHull.points) {
+      json jPoint = {{"x", point.x}, {"y", point.y}};
+      jApexes.push_back(jPoint);
+    }
+    json jConvexHull = {{"ID", convexHull.id}, {"apexes", jApexes}};
+    jConvexHulls.push_back(jConvexHull);
+  }
+  return jConvexHulls;
+}
+
+void printBoundingBox(const chf::BoundingBox& bb) {
+  std::cout << "(";
+  std::cout << std::setw(6) << std::setfill(' ') << bb.min.x << ", ";
+  std::cout << std::setw(6) << std::setfill(' ') << bb.min.y << ") (";
+  std::cout << std::setw(6) << std::setfill(' ') << bb.max.x << ", ";
+  std::cout << std::setw(6) << std::setfill(' ') << bb.max.y << ")";
+}
+
+std::string getNodeType(const chf::RTreeNode& node) {
+  if (node.isRoot()) return "root ";
+  if (node.isEntry()) return "entry";
+  if (node.isLeaf) return "leaf ";
+  return "node ";
+}
+
+void printTree(const chf::RTreeNode& node, int level) {
+  std::string indent(level * 4, ' ');
+
+  std::cout << indent << "Node  ";
+  std::cout << std::string((3 - level) * 4, ' ');
+  std::cout << "Value : " << std::setw(3) << std::setfill(' ') << node.value;
+  std::cout << " | type : " << getNodeType(node) << " | BB : ";
+  printBoundingBox(node.bb);
+  std::cout << std::endl;
+
+  if (!node.children.empty()) {
+    for (auto& child : node.children) {
+      printTree(*child, level + 1);
+    }
+  }
+}
+
 int main(int argc, char* argv[]) {
+  std::cout << std::fixed << std::setprecision(2);
+
   std::string filePath = "convex_hulls.json";
+  std::string outputFile = "filtered_convex_hulls.json";
 
   std::cout << "Loading " << filePath << "..." << std::endl;
   std::vector<chf::ConvexHull> convexHulls = loadJson(filePath);
-
-  auto printBoundingBox = [](const chf::BoundingBox& bb) {
-    std::cout << "(" << bb.min.x << ", " << bb.min.y << ") (" << bb.max.x
-              << ", " << bb.max.y << ")";
-  };
-
-  std::function<void(chf::RTreeNode&, int)> printTree =
-      [&](chf::RTreeNode& node, int level) {
-        std::string indent(level * 4, ' ');
-
-        std::cout << indent << "Value : " << node.value << std::endl;
-        std::cout << indent;
-        printBoundingBox(node.bb);
-        std::cout << std::endl;
-        std::cout << indent << "isLeaf : " << (node.isLeaf ? "true" : "false")
-                  << std::endl;
-
-        if (!node.children.empty()) {
-          std::cout << indent << "Children : " << std::endl;
-          for (auto& child : node.children) {
-            printTree(*child, level + 1);
-          }
-        }
-      };
+  std::cout << "Loaded " << convexHulls.size() << " convex hulls : ";
+  for (auto convexHull : convexHulls) {
+    std::cout << convexHull.id << " ";
+  }
+  std::cout << std::endl;
+  std::cout << std::string(50, '-') << std::endl;
 
   chf::RTree rtree(1, 3);
 
@@ -69,30 +100,28 @@ int main(int argc, char* argv[]) {
     const auto& convexHull = convexHulls[i];
     chf::BoundingBox bb(convexHull.points);
 
-    std::cout << "Insert bounding box : ";
-    printBoundingBox(bb);
-    std::cout << std::endl;
-
     // When inserting use the index in the vector instead
     rtree.insertEntry(i, bb);
-
-    printTree(rtree.treeRoot, 0);
-    std::cout << std::string(50, '-') << std::endl;
   }
+  std::cout << "Built the following tree" << std::endl;
+  printTree(rtree.treeRoot, 0);
+  std::cout << std::string(50, '-') << std::endl;
 
-  std::cout << "Searching for overlaps..." << std::endl;
+  std::cout << "Searching for bounding box overlaps..." << std::endl;
   auto pairwiseIntersections = rtree.findPairwiseIntersections();
-  std::cout << pairwiseIntersections.size() << std::endl;
+  std::cout << "Found " << pairwiseIntersections.size()
+            << " bounding box intersections : ";
   for (auto pair : pairwiseIntersections) {
     auto convexHull1 = convexHulls[pair.first];
     auto convexHull2 = convexHulls[pair.second];
-    auto [inter, interConvexHull] = convexHull1.intersection(convexHull2);
-    if (inter) {
-      std::cout << convexHull1.id << " " << convexHull2.id << std::endl;
-    }
+    std::cout << "[" << convexHull1.id << ", " << convexHull2.id << "] ";
   }
+  std::cout << std::endl;
   std::cout << std::string(50, '-') << std::endl;
 
+  std::unordered_set<int> convexHullsToRemove;
+
+  std::cout << "Checking convex hull intersections..." << std::endl;
   for (auto pair : pairwiseIntersections) {
     auto convexHull1 = convexHulls[pair.first];
     auto convexHull2 = convexHulls[pair.second];
@@ -103,15 +132,43 @@ int main(int argc, char* argv[]) {
       float convexHullArea2 = convexHull2.getArea();
       float r1 = (interArea / convexHullArea1 * 100);
       float r2 = (interArea / convexHullArea2 * 100);
-      std::cout << "Area : " << convexHullArea1 << " | " << interArea << " | "
-                << convexHullArea2 << std::endl;
-      std::cout << "Ratios : " << r1 << " %  | " << r2 << " %" << std::endl;
+      std::cout << "Area [";
+      std::cout << std::setw(3) << std::setfill(' ') << convexHull1.id << ", ";
+      std::cout << std::setw(3) << std::setfill(' ') << convexHull2.id << "] ";
+      std::cout << std::setw(6) << std::setfill(' ') << convexHullArea1 << " (";
+      std::cout << std::setw(6) << std::setfill(' ') << r1 << " %) | ";
+      std::cout << std::setw(6) << std::setfill(' ') << interArea << " | ";
+      std::cout << std::setw(6) << std::setfill(' ') << convexHullArea2 << " (";
+      std::cout << std::setw(6) << std::setfill(' ') << r2 << " %) ";
       if (r1 > 50.0f) {
-        std::cout << "Should remove " << convexHull1.id << std::endl;
+        std::cout << "Should remove " << convexHull1.id << " ";
+        convexHullsToRemove.insert(pair.first);
       }
       if (r2 > 50.0f) {
-        std::cout << "Should remove " << convexHull2.id << std::endl;
+        std::cout << "Should remove " << convexHull2.id << " ";
+        convexHullsToRemove.insert(pair.second);
       }
+      std::cout << std::endl;
     }
   }
+  std::cout << std::string(50, '-') << std::endl;
+
+  std::cout << "Filtering..." << std::endl;
+  std::vector<chf::ConvexHull> results;
+  for (std::size_t i = 0; i < convexHulls.size(); i++) {
+    if (convexHullsToRemove.find(i) == convexHullsToRemove.end()) {
+      results.push_back(convexHulls[i]);
+    }
+  }
+  std::cout << "Remaining convex hulls : ";
+  for (auto convexHull : results) {
+    std::cout << convexHull.id << " ";
+  }
+  std::cout << std::endl;
+
+  std::cout << "Writing results to file " << outputFile << "..." << std::endl;
+  json res = convertToJson(results);
+  std::ofstream o(outputFile);
+  o << std::setw(4) << res << std::endl;
+  std::cout << "Wrote " << outputFile << std::endl;
 }
