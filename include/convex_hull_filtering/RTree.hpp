@@ -23,7 +23,7 @@ class RTree {
   void adjustTree(const RTreeNode& L);
   std::vector<std::pair<int, int> > findPairwiseIntersections();
 
-  RTreeNode treeRoot;
+  std::unique_ptr<RTreeNode> treeRoot;
 
  private:
   RTreeNodePtrList nodesToAdd;

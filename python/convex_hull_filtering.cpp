@@ -137,7 +137,7 @@ static PyObject* RTree_insertEntry(PyObject* self, PyObject* args) {
                          node.bb.max.y, "children", pyChildren);
   };
 
-  return traverseTree(rtree.treeRoot);
+  return traverseTree(*rtree.treeRoot);
 }
 
 static PyObject* RTree_findPairwiseIntersections(PyObject* self,

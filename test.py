@@ -13,9 +13,6 @@ def print_tree(tree, level):
         f"{' ' * (4 * level)}Node {tree['value']} BB : {bb_to_string(bb)}")
     for child in tree["children"]:
         print_tree(child, level + 1)
-        cbb = child["bb"]
-        if (cbb[0] < bb[0] or cbb[1] < bb[1] or cbb[2] > bb[2] or cbb[3] > bb[3]):
-            print(f"ERROR for child {child['value']}")
 
 
 def load_json(filepath):
@@ -35,7 +32,7 @@ def load_json(filepath):
 convex_hulls = load_json("convex_hulls.json")
 
 entries = []
-for i, convex_hull in enumerate(convex_hulls[:6]):
+for i, convex_hull in enumerate(convex_hulls):
     bb = boundingBox(convex_hull["points"])
     entries.append([i] + bb)
     print(f"Insert index {i} with BB : {bb_to_string(bb)}")

@@ -12,7 +12,11 @@
 
 namespace convex_hull_filtering {
 RTree::RTree(unsigned int m, unsigned int M)
-    : m(m), M(M), nodeIdx(-2), spliter(&nodesToAdd, &nodeIdx) {}
+    : treeRoot(std::make_unique<RTreeNode>()),
+      m(m),
+      M(M),
+      nodeIdx(-2),
+      spliter(&nodesToAdd, &nodeIdx) {}
 
 void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
   auto newNodeIter = makeNewRTreeNode(&nodesToAdd, boundingBox);
@@ -38,27 +42,24 @@ void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
 
   // Grow tree taller
   if (!nodesToAdd.empty()) {
-    auto newNodeIter = makeNewRTreeNode(&nodesToAdd, treeRoot.bb);
-    auto& newNode = **newNodeIter;
+    // Move treeRoot to nodeToAdd
+    nodesToAdd.push_front(std::move(treeRoot));
 
-    // Copy current root to new node
-    newNode.value = treeRoot.value;
-    newNode.isLeaf = treeRoot.isLeaf;
-
-    moveAllRTreeNode(&treeRoot.children, &newNode.children);
+    // Make a new treeRoot
+    treeRoot = std::make_unique<RTreeNode>();
 
     auto nodeIter = nodesToAdd.begin();
     auto& node = **nodeIter;
-    treeRoot.bb = node.bb;
+    treeRoot->bb = node.bb;
 
     while (nodeIter != nodesToAdd.end()) {
       auto& node = **nodeIter;
-      node.parent = &treeRoot;
-      treeRoot.bb = treeRoot.bb.getUnion(node.bb);
-      nodeIter = moveRTreeNode(&nodesToAdd, nodeIter, &treeRoot.children);
+      node.parent = treeRoot.get();
+      treeRoot->bb = treeRoot->bb.getUnion(node.bb);
+      nodeIter = moveRTreeNode(&nodesToAdd, nodeIter, &treeRoot->children);
     }
-    treeRoot.isLeaf = false;
-    treeRoot.value = nodeIdx;
+    treeRoot->isLeaf = false;
+    treeRoot->value = nodeIdx;
     nodeIdx = nodeIdx - 1;
   }
 }
@@ -89,7 +90,7 @@ RTreeNode& RTree::chooseLeaf(const BoundingBox& boundingBox) {
   };
 
   // Initialize
-  return recurse(treeRoot, boundingBox);
+  return recurse(*treeRoot, boundingBox);
 }
 
 void RTree::adjustTree(const RTreeNode& L) {
@@ -204,7 +205,7 @@ std::vector<std::pair<int, int>> RTree::findPairwiseIntersections() {
       };
 
   std::vector<std::pair<RTreeNode*, RTreeNode*>> entriesToCheck =
-      buildCheckPair(&treeRoot, &treeRoot);
+      buildCheckPair(treeRoot.get(), treeRoot.get());
 
   recurse(entriesToCheck);
 

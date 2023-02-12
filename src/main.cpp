@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     rtree.insertEntry(i, bb);
   }
   std::cout << "Built the following tree" << std::endl;
-  printTree(rtree.treeRoot, 0);
+  printTree(*rtree.treeRoot, 0);
   std::cout << std::string(50, '-') << std::endl;
 
   std::cout << "Searching for bounding box overlaps..." << std::endl;
