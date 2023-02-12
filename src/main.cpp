@@ -91,10 +91,18 @@ int main(int argc, char* argv[]) {
   std::cout << std::fixed << std::setprecision(2);
 
   std::string filePath(argv[1u]);
-  std::string outputFile = "filtered_convex_hulls.json";
-
+  std::string outputFile = "result_convex_hulls.json";
+  std::vector<chf::ConvexHull> convexHulls;
   std::cout << "Loading " << filePath << "..." << std::endl;
-  std::vector<chf::ConvexHull> convexHulls = loadJson(filePath);
+
+  try {
+    convexHulls = loadJson(filePath);
+  } catch (std::exception& e) {
+    std::cerr << "Couldn't load file " << filePath << std::endl;
+    std::cerr << e.what() << std::endl;
+    return -1;
+  }
+
   std::cout << "Loaded " << convexHulls.size() << " convex hulls : ";
   for (auto convexHull : convexHulls) {
     std::cout << convexHull.id << " ";

@@ -888,7 +888,7 @@ print("Checking with m=2 and M=4")
 res = findPairwiseIntersections(2, 4, entries)
 print(res)
 
-filtered_convex_hulls = load_json("filtered_convex_hulls.json")
+filtered_convex_hulls = load_json("result_convex_hulls.json")
 
 for convex_hull in filtered_convex_hulls:
     plot_convex_hull(convex_hull)
