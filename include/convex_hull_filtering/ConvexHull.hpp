@@ -29,8 +29,7 @@ class ConvexHull {
   std::vector<Point> points;
 
  private:
-  std::tuple<char, bool, Point> advance(int curIdxP, int curIdxQ,
-                                        const Edge& pDot, const Edge& qDot,
+  std::tuple<char, bool, Point> advance(const Edge& pDot, const Edge& qDot,
                                         char inside) const;
 };
 }  // namespace convex_hull_filtering

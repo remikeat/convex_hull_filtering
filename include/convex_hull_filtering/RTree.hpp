@@ -17,7 +17,7 @@ namespace convex_hull_filtering {
 
 class RTree {
  public:
-  RTree(int m, int M);
+  RTree(unsigned int m, unsigned int M);
   void insertEntry(int value, const BoundingBox& BoundingBox);
   RTreeNode& chooseLeaf(const BoundingBox& boundingBox);
   void adjustTree(const RTreeNode& L);
@@ -27,9 +27,9 @@ class RTree {
 
  private:
   RTreeNodePtrList nodesToAdd;
-  int m;        // Min number of children
-  int M;        // Max number of children
-  int nodeIdx;  // Used to associate a unique node id when creating new
+  unsigned int m;  // Min number of children
+  unsigned int M;  // Max number of children
+  int nodeIdx;     // Used to associate a unique node id when creating new
   Spliter spliter;
 };
 }  // namespace convex_hull_filtering

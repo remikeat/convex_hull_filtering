@@ -16,7 +16,7 @@ namespace convex_hull_filtering {
 class Spliter {
  public:
   explicit Spliter(RTreeNodePtrList* nodesToAdd, int* nodeIdx);
-  bool splitNode(int m, RTreeNode* sourceNode);
+  bool splitNode(unsigned int m, RTreeNode* sourceNode);
 
  private:
   void moveEntryTo(const RTreeNodePtrList::iterator& iter, RTreeNode* destNode);

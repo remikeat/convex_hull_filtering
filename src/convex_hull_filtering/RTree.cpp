@@ -11,7 +11,7 @@
 #include "convex_hull_filtering/Spliter.hpp"
 
 namespace convex_hull_filtering {
-RTree::RTree(int m, int M)
+RTree::RTree(unsigned int m, unsigned int M)
     : m(m), M(M), nodeIdx(-2), spliter(&nodesToAdd, &nodeIdx) {}
 
 void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
@@ -164,9 +164,10 @@ std::vector<std::pair<int, int>> RTree::findPairwiseIntersections() {
         for (auto iter = entriesToCheck.begin(); iter != end; ++iter) {
           auto& nodeI = *iter->first;
           auto& nodeJ = *iter->second;
+          bool intersectionFound = nodeI.bb.intersect(nodeJ.bb);
 
           if (nodeI.isEntry() && nodeJ.isEntry()) {
-            if (nodeI.bb.intersect(nodeJ.bb)) {
+            if (intersectionFound) {
               pairwiseIntersections.push_back(
                   std::make_pair(nodeI.value, nodeJ.value));
             }
@@ -190,7 +191,7 @@ std::vector<std::pair<int, int>> RTree::findPairwiseIntersections() {
             }
 
             // Check the pairs if there is an intersection
-            if (nodeI.bb.intersect(nodeJ.bb)) {
+            if (intersectionFound) {
               auto pairIJ = buildCheckPair(&nodeI, &nodeJ);
               nodesToCheck.insert(nodesToCheck.end(), pairIJ.begin(),
                                   pairIJ.end());

@@ -1,29 +1,44 @@
 from convex_hull_filtering import *
 import numpy as np
+import json
 
-pointsA = np.matrix([[0.0, 0.0],
-                     [1.0, 0.0],
-                     [1.0, 1.0]])
-pointsE = np.matrix([[0.0, 1.0],
-                     [1.0, 0.0],
-                     [1.0, 1.0]])
 
-res = intersection(pointsA, pointsE)
+def bb_to_string(bb):
+    return f"[({bb[0]:.2f}, {bb[1]:.2f}) ({bb[2]:.2f}, {bb[3]:.2f})]"
 
-print(res)
 
-entries = np.matrix([[0.0, 0.0, 0.0, 1.0, 1.0],
-                     [1.0, 1.0, 1.0, 2.0, 2.0],
-                     [2.0, 2.0, 2.0, 3.0, 3.0],
-                     [3.0, 3.0, 3.0, 4.0, 4.0],
-                     [4.0, 4.0, 4.0, 5.0, 5.0],
-                     [5.0, 5.0, 5.0, 6.0, 6.0]])
+def print_tree(tree, level):
+    bb = tree["bb"]
+    print(
+        f"{' ' * (4 * level)}Node {tree['value']} BB : {bb_to_string(bb)}")
+    for child in tree["children"]:
+        print_tree(child, level + 1)
+        cbb = child["bb"]
+        if (cbb[0] < bb[0] or cbb[1] < bb[1] or cbb[2] > bb[2] or cbb[3] > bb[3]):
+            print(f"ERROR for child {child['value']}")
 
-res = insertEntry(1, 3, entries)
 
-print(res)
+def load_json(filepath):
+    with open(filepath) as f:
+        data = json.load(f)
 
-print(entries[:, 1:5])
+    convex_hulls = []
+    for convex_hull in data["convex hulls"]:
+        points = []
+        for apex in convex_hull["apexes"]:
+            points.append([apex['x'], apex['y']])
+        convex_hulls.append(
+            {"ID": convex_hull["ID"], "points": np.matrix(points)})
+    return convex_hulls
 
-res = searchOverlaps(1, 3, entries, entries[:, 1:5])
-print(res)
+
+convex_hulls = load_json("convex_hulls.json")
+
+entries = []
+for i, convex_hull in enumerate(convex_hulls[:6]):
+    bb = boundingBox(convex_hull["points"])
+    entries.append([i] + bb)
+    print(f"Insert index {i} with BB : {bb_to_string(bb)}")
+    res = insertEntry(1, 2, np.matrix(entries))
+    print_tree(res, 0)
+    print("-" * 50)

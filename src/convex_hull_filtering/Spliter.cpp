@@ -90,7 +90,7 @@ std::pair<float, RTreeNodePtrList::iterator> Spliter::pickNext(
   return std::make_pair(preferenceForDestNode1, bestIter);
 }
 
-bool Spliter::splitNode(int m, RTreeNode* sourceNode) {
+bool Spliter::splitNode(unsigned int m, RTreeNode* sourceNode) {
   if (sourceNode->children.size() < 2) {
     return false;
   }
@@ -136,8 +136,8 @@ bool Spliter::splitNode(int m, RTreeNode* sourceNode) {
   // Check if done
   while (!entries.empty()) {
     auto iter = entries.begin();
-    auto size1 = destNode1.children.size();
-    auto size2 = destNode2.children.size();
+    unsigned int size1 = destNode1.children.size();
+    unsigned int size2 = destNode2.children.size();
     if (size1 < m || size2 < m) {
       if (size1 < size2) {
         moveEntryTo(iter, &destNode1);

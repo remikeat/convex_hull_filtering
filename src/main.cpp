@@ -80,9 +80,14 @@ void printTree(const chf::RTreeNode& node, int level) {
 }
 
 int main(int argc, char* argv[]) {
+  if (argc != 2) {
+    std::cout << "Usage: convex_hull_filtering input_file.json" << std::endl;
+    return -1;
+  }
+
   std::cout << std::fixed << std::setprecision(2);
 
-  std::string filePath = "convex_hulls.json";
+  std::string filePath(argv[1u]);
   std::string outputFile = "filtered_convex_hulls.json";
 
   std::cout << "Loading " << filePath << "..." << std::endl;
@@ -172,4 +177,5 @@ int main(int argc, char* argv[]) {
   std::ofstream o(outputFile);
   o << std::setw(4) << res << std::endl;
   std::cout << "Wrote " << outputFile << std::endl;
+  return 0;
 }

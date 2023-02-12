@@ -45,8 +45,7 @@ bool ConvexHull::isPointInside(const Point& pt) const {
   return std::fabs(sumAngles) > EPSILON;
 }
 
-std::tuple<char, bool, Point> ConvexHull::advance(int curIdxP, int curIdxQ,
-                                                  const Edge& pDot,
+std::tuple<char, bool, Point> ConvexHull::advance(const Edge& pDot,
                                                   const Edge& qDot,
                                                   char inside) const {
   bool addPoint = false;
@@ -136,8 +135,7 @@ std::pair<bool, ConvexHull> ConvexHull::intersection(
     }
 
     // Advance either p or q
-    auto [whichToAdvance, addPoint, pointToAdd] =
-        advance(curIdxP, curIdxQ, pDot, qDot, inside);
+    auto [whichToAdvance, addPoint, pointToAdd] = advance(pDot, qDot, inside);
     if (whichToAdvance == P_POLY) {
       curIdxP += Pdirection;
     }

@@ -30,7 +30,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/convex_hull_filtering",
-      "args": [],
+      "args": ["convex_hulls.json"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
