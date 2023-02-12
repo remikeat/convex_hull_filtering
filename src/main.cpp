@@ -43,7 +43,8 @@ json convertToJson(const std::vector<chf::ConvexHull>& convexHulls) {
     json jConvexHull = {{"ID", convexHull.id}, {"apexes", jApexes}};
     jConvexHulls.push_back(jConvexHull);
   }
-  return jConvexHulls;
+  json jRes = {{"convex hulls", jConvexHulls}};
+  return jRes;
 }
 
 void printBoundingBox(const chf::BoundingBox& bb) {

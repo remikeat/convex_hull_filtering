@@ -80,37 +80,23 @@ static PyObject* ConvexHull_getArea(PyObject* self, PyObject* args) {
 }
 
 std::vector<std::pair<int, chf::BoundingBox> > parseBoundingBoxes(
-    PyArrayObject* arr, bool withIndices) {
+    PyArrayObject* arr) {
   std::vector<std::pair<int, chf::BoundingBox> > res;
-  int indexOfset = 0;
-
-  if (withIndices) {
-    indexOfset = 1;
-  }
 
   npy_intp* dims = PyArray_DIMS(arr);
   if (PyArray_TYPE(arr) == NPY_DOUBLE) {
     int nbRows = dims[0u];
-    if (dims[1u] == (4 + indexOfset)) {
+    if (dims[1u] == (5)) {
       for (auto i = 0; i < nbRows; i++) {
-        int index = 0;
-        if (withIndices) {
-          double* value =
-              reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u));
-          index = std::ceil(*value);
-        }
-        double* minX =
-            reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u + indexOfset));
-        double* minY =
-            reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 1u + indexOfset));
-        double* maxX =
-            reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 2u + indexOfset));
-        double* maxY =
-            reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 3u + indexOfset));
+        double* value = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 0u));
+        double* minX = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 1u));
+        double* minY = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 2u));
+        double* maxX = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 3u));
+        double* maxY = reinterpret_cast<double*>(PyArray_GETPTR2(arr, i, 4u));
 
-        res.push_back(
-            std::make_pair(index, chf::BoundingBox(chf::Point(*minX, *minY),
-                                                   chf::Point(*maxX, *maxY))));
+        res.push_back(std::make_pair(
+            std::ceil(*value), chf::BoundingBox(chf::Point(*minX, *minY),
+                                                chf::Point(*maxX, *maxY))));
       }
     }
   }
@@ -119,7 +105,7 @@ std::vector<std::pair<int, chf::BoundingBox> > parseBoundingBoxes(
 
 chf::RTree buildRTree(int m, int M, PyArrayObject* entryArr) {
   chf::RTree rtree(m, M);
-  auto entries = parseBoundingBoxes(entryArr, true);
+  auto entries = parseBoundingBoxes(entryArr);
   for (auto& entry : entries) {
     rtree.insertEntry(entry.first, entry.second);
   }
@@ -154,32 +140,32 @@ static PyObject* RTree_insertEntry(PyObject* self, PyObject* args) {
   return traverseTree(rtree.treeRoot);
 }
 
-static PyObject* RTree_searchOverlaps(PyObject* self, PyObject* args) {
+static PyObject* RTree_findPairwiseIntersections(PyObject* self,
+                                                 PyObject* args) {
   PyArrayObject* entriesArr = NULL;
-  PyArrayObject* boundingBoxesArr = NULL;
   int m = 1;
   int M = 3;
 
-  if (!PyArg_ParseTuple(args, "iiO!O!", &m, &M, &PyArray_Type, &entriesArr,
-                        &PyArray_Type, &boundingBoxesArr)) {
+  if (!PyArg_ParseTuple(args, "iiO!", &m, &M, &PyArray_Type, &entriesArr)) {
     PyErr_SetString(PyExc_ValueError, "ERROR: when parsing tuple");
     return NULL;
   }
 
   chf::RTree rtree = buildRTree(m, M, entriesArr);
 
-  auto boundingBoxes = parseBoundingBoxes(boundingBoxesArr, false);
-
-  PyObject* pyAllOverlaps = PyList_New(0);
-  for (const auto& boundingBox : boundingBoxes) {
-    PyObject* pyOverlaps = PyList_New(0);
-    auto res = rtree.searchOverlaps(boundingBox.second);
-    for (auto r : res) {
-      PyList_Append(pyOverlaps, PyLong_FromLong(r));
-    }
-    PyList_Append(pyAllOverlaps, pyOverlaps);
+  auto res = rtree.findPairwiseIntersections();
+  npy_intp dims[2u];
+  dims[0u] = res.size();
+  dims[1u] = 2u;
+  PyObject* ret = PyArray_SimpleNew(2, dims, NPY_INT);
+  PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(ret);
+  for (std::size_t i = 0; i < res.size(); i++) {
+    int* a = reinterpret_cast<int*>(PyArray_GETPTR2(arr, i, 0u));
+    int* b = reinterpret_cast<int*>(PyArray_GETPTR2(arr, i, 1u));
+    *a = res[i].first;
+    *b = res[i].second;
   }
-  return Py_BuildValue("O", pyAllOverlaps);
+  return Py_BuildValue("O", ret);
 }
 
 static PyObject* BoundingBox(PyObject* self, PyObject* args) {
@@ -201,7 +187,7 @@ static PyMethodDef chfMethods[] = {
     {"getArea", ConvexHull_getArea, METH_VARARGS, "Convex hull getArea"},
     {"insertEntry", RTree_insertEntry, METH_VARARGS, "Build RTree"},
     {"boundingBox", BoundingBox, METH_VARARGS, "Build BoundinbBox"},
-    {"searchOverlaps", RTree_searchOverlaps, METH_VARARGS,
+    {"findPairwiseIntersections", RTree_findPairwiseIntersections, METH_VARARGS,
      "Search for overlaps using RTree"},
     {NULL, NULL, 0, NULL}};
 
