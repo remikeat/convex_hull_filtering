@@ -21,13 +21,15 @@ class RTree {
   void insertEntry(int value, const BoundingBox& BoundingBox);
   RTreeNode& chooseLeaf(const BoundingBox& boundingBox);
   void adjustTree(const RTreeNode& L);
+  std::vector<std::pair<int, int> > findPairwiseIntersections();
 
   RTreeNode treeRoot;
 
  private:
   RTreeNodePtrList nodesToAdd;
-  int m;  // Min number of children
-  int M;  // Max number of children
+  int m;        // Min number of children
+  int M;        // Max number of children
+  int nodeIdx;  // Used to associate a unique node id when creating new
   Spliter spliter;
 };
 }  // namespace convex_hull_filtering

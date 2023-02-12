@@ -13,7 +13,8 @@
 
 namespace convex_hull_filtering {
 
-Spliter::Spliter(RTreeNodePtrList* nodesToAdd) : nodesToAdd(nodesToAdd) {}
+Spliter::Spliter(RTreeNodePtrList* nodesToAdd, int* nodeIdx)
+    : nodesToAdd(nodesToAdd), nodeIdx(nodeIdx) {}
 
 void Spliter::moveEntryTo(const RTreeNodePtrList::iterator& iter,
                           RTreeNode* destNode) {
@@ -122,7 +123,8 @@ bool Spliter::splitNode(int m, RTreeNode* sourceNode) {
   RTreeNode& destNode2 = **makeNewRTreeNode(nodesToAdd, bestNode2.bb);
 
   // Copy some node of the source node properties and reset source node
-  destNode2.value = destNode1.value;
+  destNode2.value = *nodeIdx;
+  *nodeIdx = *nodeIdx - 1;
   destNode2.isLeaf = destNode1.isLeaf;
   destNode1.bb = bestNode1.bb;
 

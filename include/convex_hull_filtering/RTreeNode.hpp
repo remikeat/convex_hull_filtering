@@ -22,7 +22,9 @@ class RTreeNode {
   RTreeNode();
   explicit RTreeNode(const BoundingBox& bb);
   bool isRoot() const;
+  bool isEntry() const;
 
+  bool hasBeenChecked;
   bool isLeaf;
   int value;
   BoundingBox bb;

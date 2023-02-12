@@ -13,7 +13,7 @@
 namespace convex_hull_filtering {
 
 ConvexHull::ConvexHull(const std::vector<Point>& points, int id)
-    : points(points) {}
+    : id(id), points(points) {}
 
 Point ConvexHull::getCircPoint(int index) const {
   int n = points.size();

@@ -4,6 +4,7 @@
 #include "convex_hull_filtering/RTree.hpp"
 
 #include <functional>
+#include <iostream>
 #include <tuple>
 
 #include "convex_hull_filtering/BoundingBox.hpp"
@@ -11,7 +12,8 @@
 #include "convex_hull_filtering/Spliter.hpp"
 
 namespace convex_hull_filtering {
-RTree::RTree(int m, int M) : m(m), M(M), spliter(&nodesToAdd) {}
+RTree::RTree(int m, int M)
+    : m(m), M(M), nodeIdx(-2), spliter(&nodesToAdd, &nodeIdx) {}
 
 std::vector<int> RTree::searchOverlaps(const BoundingBox& boundingBox) {
   std::vector<int> intersections;
@@ -79,7 +81,8 @@ void RTree::insertEntry(int value, const BoundingBox& boundingBox) {
       nodeIter = moveRTreeNode(&nodesToAdd, nodeIter, &treeRoot.children);
     }
     treeRoot.isLeaf = false;
-    treeRoot.value = -1;
+    treeRoot.value = nodeIdx;
+    nodeIdx = nodeIdx - 1;
   }
 }
 
@@ -138,6 +141,106 @@ void RTree::adjustTree(const RTreeNode& L) {
   }
   // Move up to next level
   adjustTree(*N.parent);
+}
+
+std::vector<std::pair<int, int>> RTree::findPairwiseIntersections() {
+  std::vector<std::pair<int, int>> pairwiseIntersections;
+
+  auto buildCheckPair = [](RTreeNode* nodeA, RTreeNode* nodeB) {
+    std::vector<std::pair<RTreeNode*, RTreeNode*>> checkPairs;
+    if (!nodeA->isEntry() && !nodeB->isEntry()) {
+      for (auto iterI = nodeA->children.begin(); iterI != nodeA->children.end();
+           ++iterI) {
+        auto iterJ = nodeB->children.begin();
+        if (nodeA->value == nodeB->value) {
+          iterJ = iterI;
+          ++iterJ;
+        }
+        for (; iterJ != nodeB->children.end(); ++iterJ) {
+          auto& nodeI = **iterI;
+          auto& nodeJ = **iterJ;
+          checkPairs.push_back(std::make_pair(&nodeI, &nodeJ));
+        }
+      }
+    } else if (nodeA->isEntry() && !nodeB->isEntry()) {
+      for (auto iter = nodeB->children.begin(); iter != nodeB->children.end();
+           ++iter) {
+        auto& node = **iter;
+        checkPairs.push_back(std::make_pair(nodeA, &node));
+      }
+    } else if (!nodeA->isEntry() && nodeB->isEntry()) {
+      for (auto iter = nodeA->children.begin(); iter != nodeA->children.end();
+           ++iter) {
+        auto& node = **iter;
+        checkPairs.push_back(std::make_pair(&node, nodeB));
+      }
+    } else {
+      checkPairs.push_back(std::make_pair(nodeA, nodeB));
+    }
+    return checkPairs;
+  };
+
+  std::function<void(std::vector<std::pair<RTreeNode*, RTreeNode*>>, int level)>
+      recurse =
+          [&recurse, &pairwiseIntersections, &buildCheckPair](
+              std::vector<std::pair<RTreeNode*, RTreeNode*>> entriesToCheck,
+              int level) {
+            std::string indent = std::string(level * 3, ' ');
+            std::cout << indent << "Checking : ";
+            for (auto entry : entriesToCheck) {
+              std::cout << "[" << entry.first->value << " "
+                        << entry.second->value << "] ";
+            }
+            std::cout << std::endl;
+
+            auto end = entriesToCheck.end();
+            for (auto iter = entriesToCheck.begin(); iter != end; ++iter) {
+              auto& nodeI = *iter->first;
+              auto& nodeJ = *iter->second;
+
+              if (nodeI.isEntry() && nodeJ.isEntry()) {
+                if (nodeI.bb.intersect(nodeJ.bb)) {
+                  pairwiseIntersections.push_back(
+                      std::make_pair(nodeI.value, nodeJ.value));
+                }
+              } else {
+                std::vector<std::pair<RTreeNode*, RTreeNode*>> nodesToCheck;
+
+                // Do not check again if it already has been check in the past
+                if (!nodeI.hasBeenChecked) {
+                  auto pairI = buildCheckPair(&nodeI, &nodeI);
+                  nodesToCheck.insert(nodesToCheck.end(), pairI.begin(),
+                                      pairI.end());
+                  nodeI.hasBeenChecked = true;
+                }
+
+                // Do not check again if it already has been check in the past
+                if (!nodeJ.hasBeenChecked) {
+                  auto pairJ = buildCheckPair(&nodeJ, &nodeJ);
+                  nodesToCheck.insert(nodesToCheck.end(), pairJ.begin(),
+                                      pairJ.end());
+                  nodeJ.hasBeenChecked = true;
+                }
+
+                // Check the pairs if there is an intersection
+                if (nodeI.bb.intersect(nodeJ.bb)) {
+                  auto pairIJ = buildCheckPair(&nodeI, &nodeJ);
+                  nodesToCheck.insert(nodesToCheck.end(), pairIJ.begin(),
+                                      pairIJ.end());
+                }
+                if (!nodesToCheck.empty()) {
+                  recurse(nodesToCheck, level + 1);
+                }
+              }
+            }
+          };
+
+  std::vector<std::pair<RTreeNode*, RTreeNode*>> entriesToCheck =
+      buildCheckPair(&treeRoot, &treeRoot);
+
+  recurse(entriesToCheck, 0);
+
+  return pairwiseIntersections;
 }
 
 }  // namespace convex_hull_filtering

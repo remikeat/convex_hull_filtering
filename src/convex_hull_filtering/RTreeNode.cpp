@@ -7,12 +7,15 @@
 
 namespace convex_hull_filtering {
 
-RTreeNode::RTreeNode() : isLeaf(true), value(-1), parent(nullptr) {}
+RTreeNode::RTreeNode()
+    : hasBeenChecked(false), isLeaf(true), value(-1), parent(nullptr) {}
 
 RTreeNode::RTreeNode(const BoundingBox& bb)
-    : isLeaf(true), value(-1), bb(bb), parent(nullptr) {}
+    : hasBeenChecked(false), isLeaf(true), value(-1), bb(bb), parent(nullptr) {}
 
 bool RTreeNode::isRoot() const { return parent == nullptr; }
+
+bool RTreeNode::isEntry() const { return children.empty(); }
 
 RTreeNodePtrList::iterator moveRTreeNode(RTreeNodePtrList* source,
                                          const RTreeNodePtrList::iterator& iter,
